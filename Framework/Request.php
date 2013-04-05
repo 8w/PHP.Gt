@@ -80,7 +80,7 @@ public function __construct($config) {
 		if($isTool) {
 			$toolApiPathArray = array(
 				APPROOT . "/PageTool/$apiName/Api/",
-				GTROOT .  "/PageTool/$apiName/Api",
+				GTROOT .  "/PageTool/$apiName/Api/",
 			);
 			$apiPathArray = array_merge($apiPathArray, $toolApiPathArray);
 		}

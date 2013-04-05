@@ -151,7 +151,7 @@ public function output($article, $domEl) {
 	
 	$domArticle["header > h1 a"]->text = $article["title"];
 	$domArticle["header > h1 a"]->href = $url;
-	$domArticle["header > h1 a"]->setAttribue("data-id", $article["ID"]);
+	$domArticle["header > h1 a"]->setAttribute("data-id", $article["ID"]);
 	$dtPublish = new DateTime($article["dateTimePublish"]);
 	$domArticle["header > p.date time"]->text = 
 		$dtPublish->format($this->_dtFormat);
