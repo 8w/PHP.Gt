@@ -7,7 +7,9 @@ dom("#editArticle").addEventListener("click", Tool.Blog.edit);
 /////
 
 namespace("Tool.Blog");
-Tool.Blog.edit = function() {
+Tool.Blog.edit = function(e) {
+	e.preventDefault();
+
 	var tools = tool("Blog").createEditTools(),
 		editText = this.textContent,
 		editCallback = arguments.callee;
@@ -15,16 +17,14 @@ Tool.Blog.edit = function() {
 	dom("article header h1 a").setAttribute("contenteditable", true);
 	dom(".content").setAttribute("contenteditable", true);
 
+	this.setAttribute("data-originalText", this.textContent);
 	this.textContent = "Save changes";
 	// Change edit button to save button.
 	this.addEventListener("click", function(e) {
 		e.preventDefault();
-		tools.remove();
-		this.textContent = editText;
 		this.removeEventListener("click", arguments.callee);
 		this.addEventListener("click", editCallback);
-		dom("[contenteditable]").removeAttribute("contenteditable");
-		alert("Saved!");
+		Tool.Blog.editAction.save();
 	});
 
 	this.removeEventListener("click", editCallback);
@@ -113,14 +113,23 @@ Tool.Blog.createEditTools = function() {
 
 Tool.Blog.editAction = {
 	"save": function() {
-		api("Blog", "save", {
+		var editLink = dom("a#editArticle")[0];
+		dom("div#tool_blog_edit").remove();
+		editLink.textContent = editLink.getAttribute("data-originalText");
+		editLink.removeAttribute("data-originalText");
+		dom("[contenteditable]").removeAttribute("contenteditable");
+
+		api("Blog-tool", "edit", {
+			"ID": dom("article > header h1 a").getAttribute("data-id"),
 			"title": dom("article > header h1 a").textContent,
-			"content": dom("article > div.content").innerHTML,
+			"content": dom("article > div.content").innerHTML
 		}, function() {
-			alert("Save complete.");
+			console.log("Save complete.", this.response);
 		});
 	},
 	"cancel": function(e) {
-		alert("Cancelled");
+		if(confirm("Are you sure you wish to cancel any changes?")) {
+			window.location.reload();
+		}
 	},
 };

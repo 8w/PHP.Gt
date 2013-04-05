@@ -23,14 +23,14 @@ public function __call($name, $args) {
 	// Find the appropriate SQL file, perform SQL using $this->_dal;
 	$pathArray = array(
 		APPROOT . DS . "Database" . DS . $this->_tableName . DS,
-		GTROOT  . DS . "Database" . DS . $this->_tableName . DS
+		GTROOT  . DS . "Database" . DS . $this->_tableName . DS,
 	);
 	$fileName = ucfirst($name) . ".sql";
 
 	if($this->_isTool) {
 		$toolPathArray = array(
 			APPROOT . "/PageTool/{$this->_tableName}/Database/",
-			GTROOT  . "/PageTool/{$this->_tableName}/Database/"
+			GTROOT  . "/PageTool/{$this->_tableName}/Database/",
 		);
 		$pathArray = array_merge($toolPathArray, $pathArray);
 	}

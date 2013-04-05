@@ -38,7 +38,7 @@ public function go($api, $dom, $template, $tool) {
 	}
 
 	// Attempt to find the container for the blog.
-	$container = $dom["body > section#st_article"];
+	$container = $dom["section#st_article"];
 	if($container->length == 0) {
 		$container = $dom["body > section"];
 	}
@@ -151,6 +151,7 @@ public function output($article, $domEl) {
 	
 	$domArticle["header > h1 a"]->text = $article["title"];
 	$domArticle["header > h1 a"]->href = $url;
+	$domArticle["header > h1 a"]->setAttribue("data-id", $article["ID"]);
 	$dtPublish = new DateTime($article["dateTimePublish"]);
 	$domArticle["header > p.date time"]->text = 
 		$dtPublish->format($this->_dtFormat);

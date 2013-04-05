@@ -63,13 +63,27 @@ public function __construct($config) {
 		// Look for requested API. Note that API requests have to always
 		// be in the root directory i.e. /Blog.json, and can never be nested
 		// i.e. /Blog/2010/01/Blog.json
+		$isTool = false;
 		$apiName   = ucfirst(FILE);
+		// For accessing tool APIs via AJAX, the name of the API needs to end
+		// with "-tool".
+		if(strstr($apiName, "-tool")) {
+			$isTool = true;
+			$apiName = substr($apiName, 0, strrpos($apiName, "-"));
+		}
 		$className = $apiName . "_Api";
 		$fileName  = $apiName . ".api.php";
 		$apiPathArray = array(
 			APPROOT . "/Api/",
 			GTROOT  . "/Api/",
 		);
+		if($isTool) {
+			$toolApiPathArray = array(
+				APPROOT . "/PageTool/$apiName/Api/",
+				GTROOT .  "/PageTool/$apiName/Api",
+			);
+			$apiPathArray = array_merge($apiPathArray, $toolApiPathArray);
+		}
 		foreach ($apiPathArray as $path) {
 			if(file_exists($path . $fileName)) {
 				require_once($path . $fileName);
@@ -78,6 +92,9 @@ public function __construct($config) {
 		}
 		if(class_exists($className)) {
 			$this->api = new $className();
+			if($isTool) {
+				$this->api->setTool();
+			}
 			$data = $_REQUEST;
 			if(isset($data["url"])) {
 				unset($data["url"]);

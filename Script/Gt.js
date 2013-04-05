@@ -216,7 +216,7 @@ _nodeListHelpers = {
 			"tabIndex",
 			"tagName",
 			"textContent",
-			"title"
+			"title",
 		],
 		"all": [
 		]
@@ -269,7 +269,7 @@ _nodeListHelpers = {
 			"setAttributeNodeNS",
 			"setCapture",
 			"setUserData",
-			"insertAdjacentHTML"
+			"insertAdjacentHTML",
 		],
 		"all": [
 			"addEventListener",
@@ -280,7 +280,7 @@ _nodeListHelpers = {
 			"removeAttributeNS",
 			"removeAttributeNode",
 			"removeEventListener",
-			"replace"
+			"replace",
 		]
 	}
 },
@@ -377,9 +377,20 @@ namespace = function(name, fn) {
 	return currentRef;
 },
 
+/**
+ * Shorthand function for wrapping a collection of properties and a callback
+ * function to an HTTP call to a JSON webservice in PHP.Gt. To allow XHR access
+ * to PageTool API, the API name must end with "-tool".
+ * @param  {string}   name       Name of API to call.
+ * @param  {string}   method     Name of API's method to call.
+ * @param  {object}   properties Properties object.
+ * @param  {Function} callback   Callback for http request completion.
+ * @return {XMLHttpRequest}      The XHR object used.
+ */
 api = function(name, method, properties, callback) {
-	throw "Not implemented API yet";
-	return apiObj;
+	var name = name.charAt(0).toUpperCase() + name.slice(1),
+		method = method.charAt(0).toUpperCase() + method.slice(1);
+	return http("/" + name + ".json?Method=" + method, properties, callback);
 },
 
 /**
