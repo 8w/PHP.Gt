@@ -380,7 +380,9 @@ namespace = function(name, fn) {
 /**
  * Shorthand function for wrapping a collection of properties and a callback
  * function to an HTTP call to a JSON webservice in PHP.Gt. To allow XHR access
- * to PageTool API, the API name must end with "-tool".
+ * to PageTool API, the API name must end with "-tool". API calls are always
+ * made using a POST request, so the properties object isn't constrained to the
+ * querystring size limit.
  * @param  {string}   name       Name of API to call.
  * @param  {string}   method     Name of API's method to call.
  * @param  {object}   properties Properties object.
@@ -390,7 +392,10 @@ namespace = function(name, fn) {
 api = function(name, method, properties, callback) {
 	var name = name.charAt(0).toUpperCase() + name.slice(1),
 		method = method.charAt(0).toUpperCase() + method.slice(1);
-	return http("/" + name + ".json?Method=" + method, properties, callback);
+	return http("/" + name + ".json?Method=" + method, 
+		"POST",
+		properties,
+		callback);
 },
 
 /**
@@ -452,7 +457,7 @@ tool = function(name) {
  */
 http = function(url /*,[method],[properties],[callback],[xhr],[responseType]*/){
 	var method, responseType, properties, callback, xhr, arg_i, data,
-		queryString, qsChar, qsArray, qsArrayEl, qsProperties, prop;
+		queryString, qsChar, qsArray, qsArrayEl, qsProperties, prop, form;
 
 	for(arg_i = 1; arg_i < arguments.length; arg_i++) {
 		if(typeof arguments[arg_i] == "string") {
@@ -519,6 +524,13 @@ http = function(url /*,[method],[properties],[callback],[xhr],[responseType]*/){
 		// request body.
 		properties = {};
 	}
+	form = new FormData();
+	for(prop in properties) {
+		if(!properties.hasOwnProperty(prop)) {
+			continue;
+		}
+		form.append(prop, properties[prop]);
+	}
 
 	if(callback) {
 		xhr.addEventListener("readystatechange", function() {
@@ -534,7 +546,7 @@ http = function(url /*,[method],[properties],[callback],[xhr],[responseType]*/){
 		xhr.responseType = responseType;
 	}
 	if(method == "post" || method == "put") {
-		xhr.send(properties);
+		xhr.send(form);
 	}
 	else {
 		xhr.send();

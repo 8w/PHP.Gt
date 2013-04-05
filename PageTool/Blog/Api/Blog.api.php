@@ -7,9 +7,9 @@ public $externalMethods = array("Save");
  * the UpdateArticle query, then removes all tags and re-assignes current tags.
  */
 public function edit($params, $dal, $dalEl) {
-	$ID = $_GET["ID"];
-	$title = $_GET["title"];
-	$content = $_GET["content"];
+	$ID = $_POST["ID"];
+	$title = $_POST["title"];
+	$content = $_POST["content"];
 
 	$result = $dalEl->updateArticle([
 		"ID" => $ID,
