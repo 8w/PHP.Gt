@@ -96,6 +96,10 @@ private function removePublicFiles() {
 	$fileList = new RecursiveIteratorIterator($iterator, 
 		RecursiveIteratorIterator::CHILD_FIRST);
 	foreach ($fileList as $key => $value) {
+		// Hack for road-test.
+		if(strstr($value->getPath(), "/Branding")) {
+			continue;
+		}
 		if(strstr($value->getFilename(), ".php")) {
 			continue;
 		}
