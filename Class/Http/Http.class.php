@@ -6,7 +6,6 @@
 private $_urlArray = array();
 private $_ch = array();
 private $_chm = null;
-private $_headers = array();
 
 public $response = null;
 
@@ -18,25 +17,24 @@ public function __construct($url = null, $method = "GET", $parameters = null) {
 	$this->_chm = curl_multi_init();
 	$this->response = new Http_Response();
 
-	if(empty($url)) {
-		$this->_ch[] = curl_init();
-	}
-	else {
+	if(!is_null($url)) {
 		if(is_array($url)) {
 			$urlArray = $url;
 		}
 		else {
 			$urlArray = array($url);
 		}
+
 		foreach ($urlArray as $i => $url) {
-			$this->_ch[] = curl_init();			
+			$this->_ch[] = curl_init();
+			$ch = end($this->_ch);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_HEADER, true);
 		}
 
 		$this->_urlArray = $urlArray;
 		$this->execute($urlArray, $method, $parameters);
 	}
-
-	$this->_headers[] = 'Expect:';
 }
 
 public function __destruct() {
@@ -83,9 +81,8 @@ public function setHeader($header) {
 		throw new Http_Exception("Http setHeader() only accepts string/array.");
 	}
 
-	$this->_headers = array_merge($this->_headers, $headerArray);
-		
-	return $this->_headers;
+	curl_multi_setopt($this->_ch, CURLOPT_HTTPHEADER, $headerArray);
+	return $headerArray;
 }
 
 /**
@@ -122,6 +119,7 @@ public function execute($urlArray = null, $method = "GET", $parameters = null) {
 				}
 			}
 		}
+
 		if(!empty($parameters)) {
 			foreach ($parameters as $key => $value) {
 				$url .= $paramChar;
@@ -133,18 +131,15 @@ public function execute($urlArray = null, $method = "GET", $parameters = null) {
 		curl_setopt($this->_ch[$i], CURLOPT_URL, $url);
 	}
 
-	$this->setOption("customRequest", $method);
-
 	if($method === "POST"
 	|| $method === "PUT") {
 		$this->setOption("PostFields", $parameters);
 	}
 
+	$this->setOption("customRequest", $method);
+	$this->setOption("header", true);
+
 	foreach ($this->_ch as $ch) {
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HEADER, true);
-		curl_setopt($ch, CURLINFO_HEADER_OUT, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, $this->_headers);
 		curl_multi_add_handle($this->_chm, $ch);
 	}
 
@@ -154,16 +149,14 @@ public function execute($urlArray = null, $method = "GET", $parameters = null) {
 		$status = curl_multi_exec($this->_chm, $active);
 	} while($status == CURLM_CALL_MULTI_PERFORM || $active);
 
-	$responseData = null;
-
 	foreach ($this->_ch as $ch) {
 		$response = curl_multi_getcontent($ch);
+		$info = curl_getinfo($ch);
 
 		$header = "";
 		$body = "";
 
-		// Surpress warning if there is no body index.
-		@list($header, $body) = explode("\r\n\r\n", $response, 2);
+		list($header, $body) = explode("\r\n\r\n", $response, 2);
 		$headerLines = explode("\n", $header);
 		$headers = array();
 		foreach ($headerLines as $h) {
@@ -180,10 +173,10 @@ public function execute($urlArray = null, $method = "GET", $parameters = null) {
 			"body" => $body,
 		];
 		$this->response->add($responseData);
+		$responseData = array_merge($info, $responseData);
 		
 		curl_multi_remove_handle($this->_chm, $ch);
 	}
-	return $this->response;
 }
 
 }#

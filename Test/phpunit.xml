@@ -1,22 +1,16 @@
 <?xml version="1.0"?>
-<phpunit bootstrap="TestBootstrap.php">
+<phpunit>
 	<testsuites>
 		<testsuite name="Framework Tests">
-			<directory suffix=".test.php">Framework</directory>
+			<directory suffix="Test.php">Framework</directory>
 		</testsuite>
 		<testsuite name="Component Tests">
-			<directory suffix=".test.php">Framework/Component</directory>
-		</testsuite>
-		<testsuite name="Class Tests">
-			<directory suffix=".test.php">Class</directory>
-		</testsuite>
-		<testsuite name="PageTool Tests">
-			<directory suffix=".test.php">PageTool</directory>
+			<directory suffix="Test.php">Framework/Component</directory>
 		</testsuite>
 	</testsuites>
 	<logging>
-		<log type="json" target="PhpUnit.json" />
-		<log type="tap" target="PhpUnit.tap" />
-		<log type="junit" target="PhpUnit-JUnit.xml" />
+		<log type="json" target="PhpUnit.json"/>
+		<log type="tap" target="PhpUnit.tap"/>
+		<log type="junit" target="PhpUnit-JUnit.xml"/>
 	</logging>
 </phpunit>

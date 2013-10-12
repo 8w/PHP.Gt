@@ -100,6 +100,10 @@ public function __construct($providerConfig = array()) {
 			. "/";
 	}
 
+	if(!isset($_SESSION["PhpGt_Auth"])) {
+		$_SESSION["PhpGt_Auth"] = array();		
+	}
+
 	foreach ($providerConfig as $pName => $pDetails) {
 		if(isset($pDetails["ID"])) {
 			// Lower-case the ID key if supplied in upper-case.
@@ -201,7 +205,7 @@ public function authenticate($provider) {
 }
 
 public function logout() {
-	Session::delete("PhpGt.Auth");
+	unset($_SESSION["PhpGt_Auth"]);
 	$this->hybridAuth->logoutAllProviders();
 	return;
 }
@@ -232,13 +236,15 @@ public function profile($provider) {
 public function getConnectedProfile($provider) {
 	try {
 		$adapter = $this->getAdapter($provider);
-		if(!Session::check("PhpGt.Auth.Profile.$provider")) {
-			Session::set("PhpGt.Auth.Profile.$provider",
-				$adapter->getUserProfile()
-			);
+		if(!isset($_SESSION["PhpGt_Auth"]["Profile"])) {
+			$_SESSION["PhpGt_Auth"]["Profile"] = array();
+		}
+		if(empty($_SESSION["PhpGt_Auth"]["Profile"][$provider])) {
+			$_SESSION["PhpGt_Auth"]["Profile"][$provider] = 
+				$adapter->getUserProfile();
 		}
 
-		return Session::get("PhpGt.Auth.Profile.$provider");
+		return $_SESSION["PhpGt_Auth"]["Profile"][$provider];
 	}
 	catch(Exception $e) {
 		return null;
