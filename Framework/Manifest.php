@@ -22,6 +22,7 @@
  */
 
 public function __construct($domHead) {
+	// return;
 	$dom = $domHead->_dom;
 	// Search for a meta tag with name of manifest.
 	$manifest = null;
@@ -68,7 +69,9 @@ public function __construct($domHead) {
 
 		$fh = fopen($filePath, "r");
 		while(false !== ($line = fgets($fh)) ) {
-			if(trim($line)[0] == "#") {
+			$line = trim($line);
+			if(empty($line)
+			|| $line[0] == "#") {
 				continue;
 			}
 			// Create the script/link element.
