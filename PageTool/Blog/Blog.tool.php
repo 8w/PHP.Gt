@@ -169,50 +169,48 @@ public function getArticleList($limit = 10) {
 
 /**
  * Outputs a given blog article to a particular DomEl container element.
- * @param  array $article  Associative array of article details
+ * @param  array $data  Associative array of article details.
  * @param  DomEl $domEl The container for where to place the article.
  * @return DomEl        The container where the article has been placed.
  */
-public function output($article, $domEl) {
-	$template = $this->_template;
+public function output($data = null, $domEl = null) {
+	$url = $this->getUrl($data);
+	// Obtain a clone of the templated element.
+	$domEl[".title"]->textContent = $data["title"];
+	$domEl["a.title, .title a, footer a.full, footer a.comments"]->href 
+		= $url;
+	$domEl["footer a.comments"]->href .= "#Comments";
 
-	$url = $this->getUrl($article);
+	$domEl[".author .firstName"]->textContent = $data["firstName"];
+	$domEl[".author .lastName"]->textContent = $data["lastName"];
+	$domEl[".author .fullName"]->textContent = $data["fullName"];
+	$domEl[".author a"]->href = 
+		$this->blogName 
+		. "/About/"
+		. $data["username"];
 
-	$domArticle = $template["Article"];
-	
-	$domArticle["header > h1 a"]->text = $article["title"];
-	$domArticle["header > h1 a"]->href = $url;
-	$dtPublish = new DateTime($article["dateTimePublish"]);
-	$domArticle["header > p.date time"]->text = 
-		$dtPublish->format($this->_dtFormat);
-	$domArticle["header > p.date time"]->datetime = $article["dateTimePublish"];
-	$domArticle["header > p.comments a"]->href = $url . "#Comments";
-	$domArticle["header > p.comments span"]->text = 
-		$article["num_Blog_Article_Comment"];
+	$dtPublished = new DateTime($data["dateTimePublished"]);
 
-	$tagArray = explode(",", $article["list_Blog_Article_Tag"]);
-	$domTagList = $domArticle["header > ul.tags"];
-	foreach ($tagArray as $tag) {
-		$domTag = $template["ArticleTagLink"];
-		$domTag["a"]->href = $this->getTagUrl($tag);
-		$domTag["a"]->text = $tag;
+	$domEl["time"]->textContent = "";
+	$domEl["time"]->appendChild($this->_dom->createTextNode(
+		$dtPublished->format("j")
+	));
+	$domEl["time"]->appendChild($this->_dom->createElement(
+		"sup", null, $dtPublished->format("S")
+	));
 
-		$domTagList->append($domTag);
-	}
+	$domEl["time"]->appendChild($this->_dom->createTextNode(
+		$dtPublished->format(" F Y")
+	));
 
-	if($domEl->hasClass("preview")) {
-		$domArticle["div.content"]->html = $article["preview"];
-		$domArticle["footer p a"]->href = $url;
+	if(empty($data["list_Category"])) {
+		$domEl[".categories"]->remove();
 	}
 	else {
-		$domArticle["div.content"]->html = $article["content"];
-		$domArticle["footer"]->remove();
+		// TODO: Output categories.
 	}
 
-	$domEl->append($domArticle);
-
-	// TODO: For non-preview articles, emit a new section (templated) for the 
-	// comments.
+	$domEl[".content"]->innerHTML = $data["content"];
 
 	return $domEl;
 }
