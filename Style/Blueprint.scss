@@ -1,0 +1,35 @@
+.bp-bg {
+	$bp_col = #5588cc;
+	$bp_l1 = rgba(#fff, 0.2);
+	$bp_l2 = rgba(#fff, 0.1);
+	$bp_bg: transparent;
+
+	background-color: $bp_col;
+	background-image: linear-gradient(0deg,
+		$bp_bg	0%,		$bp_bg 	9px,
+		$bp_l1	9px,	$bp_l1	10px,
+		$bp_bg	10px,	$bp_bg	19px,
+		$bp_l2	19px,	$bp_l2	20px,
+		$bp_bg	20px,	$bp_bg	29px,
+		$bp_l2	29px,	$bp_l2	30px,
+		$bp_bg	30px,	$bp_bg	39px,
+		$bp_l2	39px,	$bp_l2	40px,
+		$bp_bg	40px,	$bp_bg	49px,
+		$bp_l2	49px,	$bp_l2	50px),
+	linear-gradient(90deg,
+		$bp_bg	0%,		$bp_bg 	9px,
+		$bp_l1	9px,	$bp_l1	10px,
+		$bp_bg	10px,	$bp_bg	19px,
+		$bp_l2	19px,	$bp_l2	20px,
+		$bp_bg	20px,	$bp_bg	29px,
+		$bp_l2	29px,	$bp_l2	30px,
+		$bp_bg	30px,	$bp_bg	39px,
+		$bp_l2	39px,	$bp_l2	40px,
+		$bp_bg	40px,	$bp_bg	49px,
+		$bp_l2	49px,	$bp_l2	50px),
+	linear-gradient(to bottom,
+		$bp_col 0%,
+		darken($bp_col, 15%));
+	background-size: 50px 50px, 50px 50px, 100% 100%;
+	background-position: 0 0;
+}
