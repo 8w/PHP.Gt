@@ -33,6 +33,9 @@ private $_urlFormatArray = array(
  * matched against the title and date.
  */
 public function go($api, $dom, $template, $tool) {
+	if(!$this->checkUrl()) {
+		throw new HttpError(400);
+	}
 	// First, obtain a list of all blogs on the current date from URL.
 	// (There is probably only 1 blog for the current date, but you can't be
 	// 100% sure).
@@ -49,31 +52,103 @@ public function go($api, $dom, $template, $tool) {
 	// 301 redirect it.
 	foreach ($articleList as $article) {
 		$url = $this->getUrl($article);
-		if(count($articleList) === 1) {
+		if($articleList->length === 1) {
 			if($url !== $_SERVER["REQUEST_URI"]) {
+
 				header("Location: $url");//, 301);
 			}
 		}
 		else {
 			// TODO: Check on title.
+			die("COT");
 		}
 	}
 
 	// Lastly, output the blog to the page.
-
-	
-	// Attempt to find the container for the blog.
-	$container = $dom["body > section#st_article"];
-	if($container->length == 0) {
-		$container = $dom["body > section"];
-	}
-	if($container->length == 0) {
-		$container = $dom["body"];
-	}
-	$this->output($article, $dom["article"]);
+	$this->output($article, $dom["body > article"]);
 }
 
-public function getDateFromUrl() {
+/**
+ * Outputs a given blog article to a particular DomEl container element.
+ * @param  array $data  Associative array of article details.
+ * @param  DomEl $domEl The container for where to place the article.
+ * @return DomEl        The container where the article has been placed.
+ */
+public function output($data = null, $domEl = null) {
+	$url = $this->getUrl($data);
+	// Obtain a clone of the templated element.
+	$domEl[".title"]->textContent = $data["title"];
+	$domEl["a.title, .title a, footer a.full, footer a.comments"]->href 
+		= $url;
+	$domEl["footer a.comments"]->href .= "#Comments";
+
+	$domEl[".author .firstName"]->textContent = $data["firstName"];
+	$domEl[".author .lastName"]->textContent = $data["lastName"];
+	$domEl[".author .fullName"]->textContent = $data["fullName"];
+	$domEl[".author a"]->href = 
+		$this->blogName 
+		. "/About/"
+		. $data["username"];
+
+	$dtPublished = new DateTime($data["dateTimePublished"]);
+
+	$domEl["time"]->textContent = "";
+	$domEl["time"]->appendChild($this->_dom->createTextNode(
+		$dtPublished->format("j")
+	));
+	$domEl["time"]->appendChild($this->_dom->createElement(
+		"sup", null, $dtPublished->format("S")
+	));
+
+	$domEl["time"]->appendChild($this->_dom->createTextNode(
+		$dtPublished->format(" F Y")
+	));
+
+	if(empty($data["list_Category"])) {
+		$domEl[".categories"]->remove();
+	}
+	else {
+		// TODO: Output categories.
+	}
+
+	$domEl[".content"]->innerHTML = $data["content"];
+
+	return $domEl;
+}
+
+/**
+ * Builds a string containing the absolute URL to a specified blog, according to
+ * the blog's name, and the blog's attributes.
+ * @param  array $blogObj Associative array of blog details.
+ * @return string         Absolute URL to the blog.
+ */
+public function getUrl($blogObj) {
+	$dtPublish = new DateTime(
+		empty($blogObj["dateTimePublished"])
+			? $blogObj["dateTimeCreated"]
+			: $blogObj["dateTimePublished"]
+	);
+
+	$url = "/{$this->blogName}/";
+	$url .= $dtPublish->format("Y/M/d/");
+
+	// Transliterate characters not in ASCII, for example "café" => "cafe".
+	$title = iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $blogObj["title"]);
+	$title = str_replace(" ", "_", $title);
+	$title = preg_replace("/\W+/", "", $title);
+	$title = preg_replace("/\s+/", "-", $title);
+	$title = str_replace("_", "-", $title);
+	$title = str_replace("--", "-", $title);
+	$url .= urlencode($title);
+	$url .= ".html";
+	return $url;
+}
+
+public function getDateFromUrl($url = null) {
+	if(is_null($url)) {
+		$url = $_SERVER["REQUEST_URI"];
+	}
+
 	$matches = [];
 	preg_match("/\/" 		// A single slash
 		. $this->blogName 		// The blog name
@@ -81,7 +156,7 @@ public function getDateFromUrl() {
 		. "\/[A-Za-z]+"			// The month name
 		. "\/[0-9]+)"			// The day
 		. "\/?/",				// An optional trailing slash 
-		$_SERVER["REQUEST_URI"], $matches);
+		$url, $matches);
 
 	$dt = DateTime::createFromFormat("Y/M/d H:i:s", $matches[1] . " 00:00:00");
 	return $dt;
@@ -93,7 +168,10 @@ public function getDateFromUrl() {
  * deal with the response and emit suitable HttpErrors.
  * @return Boolean true if the format matches what is expected, otherwise false.
  */
-public function checkUrl() {
+public function checkUrl($url = null) {
+	if(is_null($url)) {
+		$url = $_SERVER["REQUEST_URI"];
+	}
 	$url = strtok($_SERVER["REQUEST_URI"], "?");
 	$url = substr($url, strlen("/{$this->blogName}/"));
 	foreach ($this->_urlFormatArray as $urlFormat) {
@@ -148,38 +226,6 @@ public function clientSide() {
 }
 
 /**
- * Gets Blog User details from the database linked to the supplied User account.
- * Creates a new Blog User if one doesn't exist.
- * @param  array 	$user 	The current user details
- * @return array 			An array of Blog_User details.
- */
-public function getBlogUser($user) {
-	do {
-		$dbResult = $this->_api[$this]->getBlogUserByUserID($user);
-		if(!$dbResult->hasResult) {
-			$this->_api[$this]->createBlogUser($user);
-		}
-	} while(!$dbResult->hasResult);
-
-	return $dbResult->result[0];
-}
-
-/**
- * Gets an associative array containing all article's details.
- * @param  int $ID ID of the article to select.
- * @return array     Associative array containing all article's details, or null
- * if no article is found.
- */
-public function getArticle($ID) {
-	$dbBlog = $this->_api[$this]->getArticleByID(array("ID" => $ID));
-	if($dbBlog->hasResult) {
-		return $dbBlog->result;
-	}
-
-	return null;
-}
-
-/**
  * Gets an array of blog details in chronological order, newest first.
  * @param  integer $limit How many blogs to retrieve (max).
  * @return array          Array of associative arrays containing blog details.
@@ -194,110 +240,21 @@ public function getArticleList($limit = 10) {
 }
 
 /**
- * Outputs a given blog article to a particular DomEl container element.
- * @param  array $data  Associative array of article details.
- * @param  DomEl $domEl The container for where to place the article.
- * @return DomEl        The container where the article has been placed.
- */
-public function output($data = null, $domEl = null) {
-	$url = $this->getUrl($data);
-	// Obtain a clone of the templated element.
-	$domEl[".title"]->textContent = $data["title"];
-	$domEl["a.title, .title a, footer a.full, footer a.comments"]->href 
-		= $url;
-	$domEl["footer a.comments"]->href .= "#Comments";
-
-	$domEl[".author .firstName"]->textContent = $data["firstName"];
-	$domEl[".author .lastName"]->textContent = $data["lastName"];
-	$domEl[".author .fullName"]->textContent = $data["fullName"];
-	$domEl[".author a"]->href = 
-		$this->blogName 
-		. "/About/"
-		. $data["username"];
-
-	$dtPublished = new DateTime($data["dateTimePublished"]);
-
-	$domEl["time"]->textContent = "";
-	$domEl["time"]->appendChild($this->_dom->createTextNode(
-		$dtPublished->format("j")
-	));
-	$domEl["time"]->appendChild($this->_dom->createElement(
-		"sup", null, $dtPublished->format("S")
-	));
-
-	$domEl["time"]->appendChild($this->_dom->createTextNode(
-		$dtPublished->format(" F Y")
-	));
-
-	if(empty($data["list_Category"])) {
-		$domEl[".categories"]->remove();
-	}
-	else {
-		// TODO: Output categories.
-	}
-
-	$domEl[".content"]->innerHTML = $data["content"];
-
-	return $domEl;
-}
-
-/**
  * Sets the name of the blog, that is used in the generation of URLs. Ensures
  * there is a blog of that name in the database.
  * @param string $name The name of the blog.
  */
-public function setName($name) {
-	$this->blogName = $name;
-
-	$dbResult = $this->_api[$this]->getBlogByName(["name" => $name]);
-	if(!$dbResult->hasResult) {
-		$this->_api[$this]->create(["name" => $name]);
+public function setName($name = null) {
+	if(!empty($name)) {
+		$this->blogName = $name;		
 	}
-}
 
-/**
- * Builds a string containing the absolute URL to a specified blog, according to
- * the blog's name, and the blog's attributes.
- * @param  array $blogObj Associative array of blog details.
- * @return string         Absolute URL to the blog.
- */
-public function getUrl($blogObj) {
-	$dtPublish = new DateTime(
-		empty($blogObj["dateTimePublished"])
-			? $blogObj["dateTimeCreated"]
-			: $blogObj["dateTimePublished"]
-	);
+	// TODO ^! !"£% IRHGKW£HR"
 
-	$url = "/{$this->blogName}/";
-	$url .= $dtPublish->format("Y/M/d/");
-
-	// Transliterate characters not in ASCII, for example "café" => "cafe".
-	$title = iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $blogObj["title"]);
-	$title = str_replace(" ", "_", $title);
-	$title = preg_replace("/\W+/", "", $title);
-	$title = preg_replace("/\s+/", "-", $title);
-	$title = str_replace("_", "-", $title);
-	$title = str_replace("--", "-", $title);
-	$url .= urlencode($title);
-	$url .= ".html";
-	return $url;
-}
-
-/**
- * Builds a string containing the absolute URL to a specified tag.
- * @param  array $tagObj Associative array of tag details.
- * @return string        Absolute URL to the tag page.
- */
-public function getTagUrl($tagObj) {
-	$name = is_string($tagObj)
-		? $tagObj
-		: $tagObj["name"];
-
-
-	$url = "/{$this->blogName}/Tagged/";
-	$url .= urlencode($name);
-	$url .= ".html";
-	return $url;
+	$dbResult = $this->_api[$this]->getBlogByName(["name" => $this->blogName]);
+	if(!$dbResult->hasResult) {
+		$this->_api[$this]->create(["name" => $this->blogName]);
+	}
 }
 
 }#
