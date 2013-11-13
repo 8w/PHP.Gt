@@ -11,10 +11,40 @@ select
 	Blog_Article.coverImageUrl,
 	Blog_Article.dateTimeCreated,
 	ifnull(Blog_Article.dateTimePublished, Blog_Article.dateTimeCreated
-		)as dateTimePublished,
+		)as dateTimeAppears,
+	
 	Blog_Article.dateTimeFeatured,
 	Blog_Article.dateTimeUnfeatured,
-	count(Blog_Article_Comment.ID) as commentCount
+	count(Blog_Article_Comment.ID) as commentCount,
+
+	(
+		select 
+			Blog_Article.ID
+		from
+			Blog_Article
+		where
+			Blog_Article.FK_Blog = ID_Blog
+		and
+			ifnull(Blog_Article.dateTimePublished, Blog_Article.dateTimeCreated
+				) > dateTimeAppears
+		order by ifnull(Blog_Article.dateTimePublished, 
+			Blog_Article.dateTimeCreated) asc
+		limit 1
+	)as ID_next,
+	(
+		select 
+			Blog_Article.ID
+		from
+			Blog_Article
+		where
+			Blog_Article.FK_Blog = ID_Blog
+		and
+			ifnull(Blog_Article.dateTimePublished, Blog_Article.dateTimeCreated
+				) < dateTimeAppears
+		order by ifnull(Blog_Article.dateTimePublished, 
+			Blog_Article.dateTimeCreated) desc
+		limit 1
+	)as ID_prev
 from
 	Blog_Article
 
@@ -38,7 +68,9 @@ and
 
 -- We group on the comment's ID field so that the count() function doesn't
 -- force an empty row on an empty result. 
-group by Blog_Article_Comment.ID
+group by 
+	Blog_Article_Comment.ID,
+	Blog_Article.ID
 
-having
-	date(dateTimePublished) = :date
+order by
+	dateTimeAppears
