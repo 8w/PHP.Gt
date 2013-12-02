@@ -33,7 +33,7 @@ class SassNumber extends SassLiteral
    * If the units are pixels the result is always
    * rounded down to the nearest integer.
    */
-  const PRECISION = 3;
+  const PRECISION = 9;
 
   /**
    * @var array Conversion factors for units using inches as the base unit
