@@ -15,11 +15,6 @@ public function __construct($filePath) {
 public function parse() {
 	$this->_sassParser = new SassParser();
 	$this->_sassParser->debug_info = !App_Config::isProduction();
-<<<<<<< HEAD
-
-=======
-	
->>>>>>> 147-sass-debug-info
 	$parsedString = $this->_sassParser->toCss($this->_filePath);
 	return $parsedString;
 }
