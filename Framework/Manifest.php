@@ -26,6 +26,7 @@ public function __construct($domHead) {
 	$dom = $domHead->_dom;
 	// Search for a meta tag with name of manifest.
 	$manifest = null;
+	$metaTag;
 	$metaList = $domHead["meta"];
 	foreach ($metaList as $meta) {
 		if($meta->hasAttribute("name")) {
@@ -35,7 +36,7 @@ public function __construct($domHead) {
 						"Manifest meta tag has no content attribute");
 				}
 				$manifest = $meta->getAttribute("content");
-				$meta->remove();
+				$metaTag = $meta;
 				break;
 			}
 		}
@@ -83,10 +84,12 @@ public function __construct($domHead) {
 				}				
 			}
 
-			$domHead->appendChild($el);
+			$metaTag->prependSibling($el);
 		}
 		fclose($fh);
 	}
+
+	$metaTag->remove();
 }
 
 }#
