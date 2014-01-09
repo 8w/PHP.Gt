@@ -3,7 +3,6 @@ private $_filePath;
 private $_sassParser;
 
 public function __construct($filePath) {
-	require_once("SassParser/SassParser.php");
 	$filePath = preg_replace("/\/+/", "/", $filePath);
 	if(!file_exists($filePath)) {
 		return false;

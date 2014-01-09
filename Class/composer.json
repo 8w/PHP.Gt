@@ -1,5 +1,6 @@
 {
     "require": {
-        "vladkens/autoprefixer": "dev-master"
+        "vladkens/autoprefixer": "dev-master",
+        "richthegeek/phpsass": "dev-master"
     }
 }
