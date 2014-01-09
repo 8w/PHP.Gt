@@ -113,7 +113,15 @@ private static function process_js($sourcePath, $recurse = false) {
 
 private static function process_sass($sourcePath) {
 	$sass = new Sass($sourcePath);
-	return $sass->parse();	
+	$css = $sass->parse();
+
+	if(false) { 
+		$autoprefixer = new Autoprefixer("> 1%");
+		return $autoprefixer->compile($css);
+
+	} else {
+		return $css;
+	}
 }
 
 private static function process_scss($sourcePath) {
