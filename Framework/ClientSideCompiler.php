@@ -115,7 +115,7 @@ private static function process_sass($sourcePath) {
 	$sass = new Sass($sourcePath);
 	$css = $sass->parse();
 
-	if(false) { 
+	if(true) { 
 		$autoprefixer = new Autoprefixer("> 1%");
 		return $autoprefixer->compile($css);
 
