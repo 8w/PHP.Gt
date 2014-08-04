@@ -130,33 +130,19 @@ public function __construct($config, $t) {
 		$pcDirArray = array();
 		$pcBaseDir = APPROOT . "/PageCode/";
 		$filePathArray = explode("/", DIR);
-		for($i = 0; $i < count($filePathArray); $i++) {
-			$prefix = "";
-			foreach ($pcDirArray as $pcDir) {
-				$prefix .= $pcDir . "/";
-			}
+		$folder = "";
 
-			$pcDirArray[] = $prefix . $filePathArray[$i];
+		for($i = 0; $i <= count($filePathArray); $i++) {
+			array_unshift($pcDirArray, $folder);
+			$folder .= $filePathArray[$i] . "/";
 		}
-		$pcDirArray = array_reverse($pcDirArray);
-		if(!in_array("", $pcDirArray)) {
-			$pcDirArray[] = "";
-		}
-
-		// $pcDirArray now contains at least 1 element, which is the
-		// relative directory of the current request, plus the relative
-		// directories moving up the tree to the root directory.
-		// For example: /Shop/NewItems/Item-1.html will become array(
-		// 0 => 'Shop/NewItems', 1 => 'Shop')
-
-		// Reverse array so that common PageCodes are executed in tree order.
-		$pcDirArray = array_reverse($pcDirArray);
 
 		foreach ($pcDirArray as $pcDir) {
 			$pcCommonPath  = APPROOT . "/PageCode/" . $pcDir . "/";
 			$pcCommonFile  = "_Common.php";
 			$pcCommonClass = str_replace("/", "_", $pcDir) 
 				. "_Common";
+			$pcCommonClass = str_replace("__", "_", $pcCommonClass);
 			if(file_exists($pcCommonPath . $pcCommonFile)) {
 				require_once($pcCommonPath . $pcCommonFile);
 				if(class_exists($pcCommonClass)) {
