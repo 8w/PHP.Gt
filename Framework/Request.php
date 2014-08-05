@@ -127,14 +127,15 @@ public function __construct($config, $t) {
 		// Look for common PageCode for current directory, also work up the
 		// directory tree and look for and execute higher PageCodes.
 		$pcClassSuffix = "_PageCode";
-		$pcDirArray = array();
 		$pcBaseDir = APPROOT . "/PageCode/";
 		$filePathArray = explode("/", DIR);
 		$folder = "";
+		// put the root folder in the array first
+		$pcDirArray = [ $folder ];
 
-		for($i = 0; $i <= count($filePathArray); $i++) {
-			array_unshift($pcDirArray, $folder);
+		for($i = 0; $i < count($filePathArray); $i++) {
 			$folder .= $filePathArray[$i] . "/";
+			$pcDirArray []= $folder;
 		}
 
 		foreach ($pcDirArray as $pcDir) {
