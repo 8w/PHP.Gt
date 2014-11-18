@@ -141,10 +141,11 @@ $returnUrl = null, $cancelUrl = null) {
 	$transaction->item_list = new StdClass();
 	$transaction->item_list->items = [];
 	$transaction->amount = new StdClass();
-	$transaction->amount->total = 0;
+	$transaction->amount->total = 0.00;
 	$transaction->amount->currency = $currency;
 	$transaction->amount->details = new StdClass();
 	$transaction->amount->details->subtotal = 0.00;
+	$transaction->amount->details->tax = 0.00;
 
 	if(!is_array($item)) {
 		throw new Exception(
@@ -169,7 +170,7 @@ $returnUrl = null, $cancelUrl = null) {
 			throw new Exception("Item price not supplied");
 		}
 		$itemObj->name = $i["name"];
-		$itemObj->price = (string)$i["price"];
+		$itemObj->price = number_format($i["price"], 2);
 		$itemObj->currency = $currency;
 
 		if(isset($i["sku"])) {
@@ -191,13 +192,18 @@ $returnUrl = null, $cancelUrl = null) {
 	}
 	if(isset($details["shipping"])) {
 		$transaction->amount->total += $details["shipping"];
-		$transaction->amount->details->shipping = $details["shipping"];
+		$transaction->amount->details->shipping = number_format($details["shipping"], 2);
 	}
 	if(isset($details["tax"])) {
 		$transaction->amount->total += $details["tax"];
 		$transaction->amount->details->tax = $details["tax"];
 	}
 
+	// make sure we've got exactly 2dp as req'd by paypal
+	$transaction->amount->details->subtotal 
+		= number_format($transaction->amount->details->subtotal, 2);
+	$transaction->amount->details->tax = number_format($transaction->amount->details->tax, 2);
+	$transaction->amount->total = number_format($transaction->amount->total, 2);
 
 	$obj = new StdClass();
 	$obj->intent = "sale";
@@ -246,6 +252,7 @@ $returnUrl = null, $cancelUrl = null) {
 	}
 	else {
 		$logger->error($curl_result);
+		error_log(print_r($curl_result, true));
 		throw new Exception("Payment failed to be created.");
 	}
 }
