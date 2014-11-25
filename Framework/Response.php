@@ -19,7 +19,7 @@ public function __construct($request) {
 	}
 
 	header("Content-Type: {$request->contentType}; charset=utf-8");
-	header("X-Powered-By: PHP.Gt Version " . VER);
+	// header("X-Powered-By: PHP.Gt Version " . VER);
 
 	if(EXT === "json") {
 		$this->_api = $request->api;

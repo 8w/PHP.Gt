@@ -135,7 +135,13 @@ public function __construct($config, $t) {
 
 		for($i = 0; $i < count($filePathArray); $i++) {
 			$folder .= $filePathArray[$i] . "/";
-			$pcDirArray []= $folder;
+
+			// only add it to the path array if it's not the root (which is already added)
+			// - NOTE must add it before the loop not here otherwise it doesn't get 
+			// picked-up on nested folders
+			if($filePathArray[$i] !== "") {
+				$pcDirArray []= $folder;
+			}
 		}
 
 		foreach ($pcDirArray as $pcDir) {
