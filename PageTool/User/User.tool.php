@@ -136,6 +136,8 @@ public function checkAuth($auth) {
 		}
 		if($existingOAuthUser->hasResult) {
 			$dbUser = $existingOAuthUser->result[0];
+			// update the cookie to match the logged-in user
+			$this->track($dbUser["uuid"]);
 		}
 		else {
 			// Store the missing OAuth records once the user ID is found.
@@ -223,7 +225,7 @@ public function track($forceUuid = null) {
 			? $this->generateSalt()
 			: $forceUuid;
 		$expires = strtotime("+105 weeks");
-		if(!setcookie("PhpGt_User_PageTool", $uuid, $expires, "/")) {
+		if(!setcookie("PhpGt_User_PageTool", $uuid, $expires, "/", "", true, true)) {
 			throw new HttpError(500,
 				"Error generating tracking cookie in User PageTool.");
 		}
