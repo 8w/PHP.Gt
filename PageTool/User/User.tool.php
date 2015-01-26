@@ -225,7 +225,10 @@ public function track($forceUuid = null) {
 			? $this->generateSalt()
 			: $forceUuid;
 		$expires = strtotime("+105 weeks");
-		if(!setcookie("PhpGt_User_PageTool", $uuid, $expires, "/", "", true, true)) {
+		// if we're in production, only allow the cookie over https.  (Can't always
+		// do it otherwise the built-in server won't work, and we do want it to)
+		$secureOnly = (\App_Config::isProduction() === true);
+		if(!setcookie("PhpGt_User_PageTool", $uuid, $expires, "/", "", $secureOnly, true)) {
 			throw new HttpError(500,
 				"Error generating tracking cookie in User PageTool.");
 		}
