@@ -19,7 +19,7 @@ private $_name;
 private $_file;
 private $_path = APPROOT;
 private $_datePattern = "Y-m-d H:i:s";
-private $_messageFormat = 
+private $_messageFormat =
 	"%DATETIME% %LEVEL% [%CLASS%, %FILE% :%LINE%]\t%MESSAGE%\n";
 private $_messageEnd = "\n";
 
@@ -29,7 +29,7 @@ private $_defaults = array(
 	"classBlackList" => array(),
 	"path" => APPROOT,
 	"datePattern" => "Y-m-d H:i:s",
-	"messageFormat" => 
+	"messageFormat" =>
 		"%DATETIME% %LEVEL% [%CLASS%, %FILE% :%LINE%]\t%MESSAGE%\n",
 );
 
@@ -41,13 +41,13 @@ public function __construct($name, $config) {
 	if(class_exists("Log_Config")) {
 		$this->importConfig();
 		if(isset(Log_Config::$logLevel)) {
-			$this->_logLevel = Log_Config::$logLevel;			
+			$this->_logLevel = Log_Config::$logLevel;
 		}
 		if(isset(Log_Config::$path)) {
-			$this->_path = Log_Config::$path;			
+			$this->_path = Log_Config::$path;
 		}
 		if(isset(Log_Config::$datePattern)) {
-			$this->_datePattern = Log_Config::$datePattern;			
+			$this->_datePattern = Log_Config::$datePattern;
 		}
 	}
 
@@ -72,7 +72,7 @@ private function importConfig() {
 		}
 
 		if(isset($_this->_defaults[$member])) {
-			$this->_{$member} = $this->_defaults[$member];			
+			$this->_{$member} = $this->_defaults[$member];
 		}
 	}
 
@@ -114,7 +114,7 @@ private function log($backtrace, $level, $msg, $throwable = null) {
 		$logLevel = array_search($logLevel, $this->_levels);
 	}
 
-	// Level is the current level of the log being made, 
+	// Level is the current level of the log being made,
 	// from 0: FATAL to 5: TRACE.
 	// LogLevel is the minimum-allowed log to be made.
 	if($level > $logLevel) {
@@ -132,13 +132,14 @@ private function log($backtrace, $level, $msg, $throwable = null) {
 	$logLine = str_replace("%IP%", $_SERVER["REMOTE_ADDR"], $logLine);
 	$logLine = str_replace("%PORT%", $_SERVER["REMOTE_PORT"], $logLine);
 	$logLine = str_replace(
-		"%REFERER%", 
-		isset($_SERVER["HTTP_REFERER"]) 
-			? $_SERVER["HTTP_REFERER"] 
-			: "referer-not-set", 
+		"%REFERER%",
+		isset($_SERVER["HTTP_REFERER"])
+			? $_SERVER["HTTP_REFERER"]
+			: "referer-not-set",
 		$logLine);
 	if(!is_null($throwable)) {
-		str_replace("%EXCEPTION%", $throwable->getMessage());
+		$insert = ": " . $throwable->getMessage();
+		$logLine = substr_replace($logLine, $insert, -1, 0);
 	}
 
 	if(!empty($this->_classWhiteList)) {
