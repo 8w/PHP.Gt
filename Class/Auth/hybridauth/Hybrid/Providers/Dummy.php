@@ -38,7 +38,11 @@
 
     function getUserProfile()
     {
+        $userID = Session::get("PhpGt.Auth.ID_User");
         $this->user->profile->identifier = $this->_userID;
+        $this->user->profile->displayName = "Dummy user " . $this->_userID;
+        $this->user->profile->email = "test+Dummy_{$userID}@finanscapes.com";
+        $this->user->profile->emailVerified = "test+Dummy_{$userID}@finanscapes.com";
         return $this->user->profile;
     }
 }# 
