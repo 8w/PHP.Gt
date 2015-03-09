@@ -1,4 +1,7 @@
-<?php class PayPal_PageTool extends PageTool {
+<?php
+use RoadTest\Utility\Logger\LoggerFactory;
+
+class PayPal_PageTool extends PageTool {
 
 const STATE_APPROVED = "approved";
 const STATE_PENDING = "pending";
@@ -30,7 +33,7 @@ public function init($clientID, $secret, $production) {
 		Session::delete($this->_sessionNS);
 	}
 
-	// Store clientID and secret internally to allow for automatic 
+	// Store clientID and secret internally to allow for automatic
 	// refreshing of OAuth2 token.
 	$this->_clientID = $clientID;
 
@@ -109,7 +112,7 @@ public function init($clientID, $secret, $production) {
  * include: "name", "quantity", "price", "tax" (amount), "sku"
  * (stock keeping unit).
  * @param $details array The transaction's details. The array keys can include:
- * "description" (transaction's description), "shipping" (amount), 
+ * "description" (transaction's description), "shipping" (amount),
  * "tax" (amount), "address" (if different to payment address).
  * @param $currency string Three letter currency code.
  * @param $returnUrl string The full URL to the page where the user should be
@@ -120,7 +123,7 @@ public function init($clientID, $secret, $production) {
  */
 public function createPayment($item, $details, $currency,
 $returnUrl = null, $cancelUrl = null) {
-	$logger = Log::get("PayPal");
+	$logger = LoggerFactory::get($this);
 
 	if(false !== ($obj = $this->executePayment()) ) {
 		return $obj;
@@ -200,7 +203,7 @@ $returnUrl = null, $cancelUrl = null) {
 	}
 
 	// make sure we've got exactly 2dp as req'd by paypal
-	$transaction->amount->details->subtotal 
+	$transaction->amount->details->subtotal
 		= number_format($transaction->amount->details->subtotal, 2);
 	$transaction->amount->details->tax = number_format($transaction->amount->details->tax, 2);
 	$transaction->amount->total = number_format($transaction->amount->total, 2);
@@ -236,7 +239,7 @@ $returnUrl = null, $cancelUrl = null) {
 	curl_close($ch);
 
 	$obj = json_decode($curl_result);
-	
+
 	if(isset($obj->state)
 	&& $obj->state == "created"
 	&& isset($obj->links)
@@ -269,7 +272,7 @@ public function pay() {
  * by PayPal after approving a payment's creation.
  */
 public function executePayment() {
-	$logger = Log::get("PayPal");
+	$logger = LoggerFactory::get($this);
 
 	if(!isset($_GET["token"])
 	|| !isset($_GET["PayerID"])) {

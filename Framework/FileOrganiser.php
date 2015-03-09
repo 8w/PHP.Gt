@@ -16,7 +16,6 @@ public function __construct($manifest) {
  */
 public function organise($forceCompile = false) {
 	$copyingDone = false;
-	$logger = Log::get();
 
 	$assetFilesCache = $this->isAssetFilesCacheValid();
 	if(!$assetFilesCache) {
@@ -29,7 +28,7 @@ public function organise($forceCompile = false) {
 		$this->organiseStyleScriptFiles();
 		$copyingDone = true;
 	}
-	
+
 	$manifestCacheValid = $this->_manifest->isCacheValid();
 	if($manifestCacheValid) {
 		if(App_Config::isClientCompiled()) {
@@ -70,7 +69,7 @@ public function isAssetFilesCacheValid() {
 	$md5 = "";
 
 	$md5Array = array();
-	$outputArray = FileSystem::loopDir($assetDir, $assetWwwDir, 
+	$outputArray = FileSystem::loopDir($assetDir, $assetWwwDir,
 	[$this, "iterateMd5"], false);
 
 	$md5Array = array_merge($md5Array, $outputArray);
@@ -83,7 +82,7 @@ public function isAssetFilesCacheValid() {
 }
 
 /**
- * Performs the recursive copy process for all files in the source asset 
+ * Performs the recursive copy process for all files in the source asset
  * directory.
  */
 private function copyAssets($dryRun = false) {
@@ -95,7 +94,7 @@ private function copyAssets($dryRun = false) {
 	}
 
 	$md5 = "";
-	$md5Array = FileSystem::loopDir($assetDir, $assetWwwDir, 
+	$md5Array = FileSystem::loopDir($assetDir, $assetWwwDir,
 	[$this, "iterateMd5"], !$dryRun);
 
 	foreach ($md5Array as $m) {
@@ -146,7 +145,7 @@ private function flushCache() {
 }
 
 /**
- * Copies all non-.css files from APPROOT/Style and GTROOT/Style into the 
+ * Copies all non-.css files from APPROOT/Style and GTROOT/Style into the
  * www/Style directory. This is necessary so that style assets such as images
  * and fonts can be referenced from within client-side files themselves.
  *
@@ -162,7 +161,7 @@ private function organiseStyleScriptFiles($dryRun = false) {
 	$dirArray = [
 		APPROOT . "/Style",
 		GTROOT . "/Style",
-		
+
 		APPROOT . "/Script",
 		GTROOT . "/Script",
 	];
@@ -176,12 +175,12 @@ private function organiseStyleScriptFiles($dryRun = false) {
 			continue;
 		}
 
-		$outputArray = FileSystem::loopDir($dir, $wwwStyleDir, 
+		$outputArray = FileSystem::loopDir($dir, $wwwStyleDir,
 		[$this, "iterateMd5"], !$dryRun);
 
 		$md5Array = array_merge($md5Array, $outputArray);
 	}
-	
+
 	foreach ($md5Array as $m) {
 		$md5 .= $m;
 	}
@@ -209,7 +208,7 @@ public function iterateMd5($item, $iterator, $innerDir, $doCopy) {
 			if(!is_dir(dirname($wwwPath))) {
 				mkdir(dirname($wwwPath), 0775, true);
 			}
-			copy($sourcePath, $wwwPath);				
+			copy($sourcePath, $wwwPath);
 		}
 	}
 
@@ -218,7 +217,7 @@ public function iterateMd5($item, $iterator, $innerDir, $doCopy) {
 
 /**
  * Copies all files referenced by the manifest to their public www location,
- * while at the same time processing their contents using the 
+ * while at the same time processing their contents using the
  * ClientSideCompiler.
  */
 private function processCopy($forceCompile = false) {
