@@ -1,4 +1,7 @@
-<?php class Manifest {
+<?php
+use RoadTest\Utility\Logger\LoggerFactory;
+
+class Manifest {
 /**
  * https://github.com/g105b/PHP.Gt/wiki/structure~Manifest
  */
@@ -93,15 +96,18 @@ public function getFingerprint() {
 			// fingerprinting process.  Have to fingerprint the whole file not the
 			// path to force the folder name to change and so force the  browser
 			// to load the new file if any contents have changed
-			if(is_readable($source)) {
-				$fingerprint .= md5(file_get_contents($source));
+			$sourcePath = APPROOT . $source;
+			if(is_readable($sourcePath)) {
+				$fingerprint .= md5_file($sourcePath);
 			} else {
-				// TODO: write to the log!
+				LoggerFactory::get($this)->warning(
+					"Heading file $source not found");
 			}
 
 			$this->_pathArray[] = $source;
 		}
 	}
+
 	$this->_fingerprint = md5($fingerprint);
 	return $this->_fingerprint;
 }
