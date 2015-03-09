@@ -56,7 +56,7 @@ public function getFingerprint() {
 	}
 
 	$fingerprint = "";
-	
+
 	$this->_pathArray = array();
 	$elementList = $this->getAllHeadElements();
 	foreach ($elementList as $element) {
@@ -91,14 +91,17 @@ public function getFingerprint() {
 
 			// At this point in the loop, this element should be used in the
 			// fingerprinting process.  Have to fingerprint the whole file not the
-			// path to force the folder name to change and so force the  browser 
+			// path to force the folder name to change and so force the  browser
 			// to load the new file if any contents have changed
-			$fingerprint .= md5($source);
+			if(is_readable($source)) {
+				$fingerprint .= md5(file_get_contents($source));
+			} else {
+				// TODO: write to the log!
+			}
 
 			$this->_pathArray[] = $source;
 		}
 	}
-
 	$this->_fingerprint = md5($fingerprint);
 	return $this->_fingerprint;
 }
@@ -252,9 +255,9 @@ private function getFileList($name) {
 
 					$output[] = $iterator->getSubPathname();
 				});
-				
+
 				foreach ($output as $o) {
-					$result[$type][] = $noAsterisk . $o;					
+					$result[$type][] = $noAsterisk . $o;
 				}
 			}
 			else {
@@ -274,7 +277,7 @@ private function getAllHeadElements() {
 	if(is_null($this->_domHead)) {
 		return array();
 	}
-	
+
 	$cssSelector = "";
 	foreach (Manifest::$elementDetails as $type => $typeDetails) {
 		if(!empty($cssSelector)) {
@@ -332,7 +335,7 @@ public function minifyDomHead() {
 			|| $element->hasAttribute("data-nocompile")) {
 				continue;
 			}
-			
+
 			foreach ($typeDetails["ReqAttr"] as $key => $value) {
 				if(!$element->hasAttribute($key)) {
 					continue 2;
@@ -364,7 +367,7 @@ public function minifyDomHead() {
 		}
 
 		// Ensure that the link element is added before other elements (apart
-		// from inline scripts), and the script element is added after other 
+		// from inline scripts), and the script element is added after other
 		// elements, to allow parallel HTTP requests.
 		if($typeDetails["TagName"] == "script") {
 			$this->_domHead->insertBefore($minElement, null);
