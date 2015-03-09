@@ -122,8 +122,9 @@ class LinkedIn {
 	const _URL_ACCESS                  = 'https://api.linkedin.com/uas/oauth/accessToken';
 	const _URL_API                     = 'https://api.linkedin.com';
 	const _URL_AUTH                    = 'https://www.linkedin.com/uas/oauth/authenticate?oauth_token=';
-	// const _URL_REQUEST                 = 'https://api.linkedin.com/uas/oauth/requestToken';
-	const _URL_REQUEST                 = 'https://api.linkedin.com/uas/oauth/requestToken?scope=r_basicprofile+r_emailaddress+rw_nus'; 
+	const _URL_REQUEST                 = 'https://api.linkedin.com/uas/oauth/requestToken';
+	// use the below to hard-set the scope (config's scope is ignored)
+	// const _URL_REQUEST                 = 'https://api.linkedin.com/uas/oauth/requestToken?scope=r_basicprofile%20r_emailaddress'; 
 	const _URL_REVOKE                  = 'https://api.linkedin.com/uas/oauth/invalidateToken';
 	
 	// Library version

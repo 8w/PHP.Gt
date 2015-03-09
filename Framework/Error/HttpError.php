@@ -1,4 +1,7 @@
-<?php class HttpError extends Exception {
+<?php
+use RoadTest\Utility\Logger\LoggerFactory;
+
+class HttpError extends Exception {
 /**
  * TODO: Docs.
  */
@@ -9,7 +12,7 @@ private $_errorCodeMessage = array(
 	401 => "Unauthorized",			// Requires authorisation to view.
 	403 => "Forbidden",				// Not accessible (from IP/hostname).
 	404 => "Not Found",
-	408 => "Request Timeout",		
+	408 => "Request Timeout",
 	410 => "Gone",					// Deleted a page.
 	429 => "Too Many Requests",		// Use to limit API calls, etc.
 	500 => "Internal Server Error",	// Uncaught errors.
@@ -40,9 +43,9 @@ $code, $data = null, Exception $previous = null) {
 	|| App_Config::isProduction()) {
 		if(array_key_exists($code, $this->_errorCodeMessage)) {
 			$data = $this->_errorCodeMessage[$code];
-		}		
+		}
 	}
-	
+
 	http_response_code($code);
 	$this->displayError($code, $data);
 	exit;
@@ -60,8 +63,8 @@ private function sendHeaders() {
 	if(is_int($args[0]) && is_string($args[1])) {
 		header($_SERVER["SERVER_PROTOCOL"]
 			. " "
-			. $args[0] 
-			. " " 
+			. $args[0]
+			. " "
 			. $args[1]);
 	}
 	else if(is_array($args[0])) {
@@ -94,24 +97,24 @@ private function displayError($code, $data = array("")) {
 	}
 	if(isset($data["Context"])) {
 		$message .= "\n";
-		foreach($data["Context"] as $contextLine) {
-			$message .= "\n$contextLine";
+		if(is_array($data["Context"])) {
+			foreach($data["Context"] as $contextLine) {
+				$message .= "\n$contextLine";
+			}
+		} else {
+			$message .= $data["Context"] . "\n";
 		}
 	}
 
-
-	if(count($data) == 1) {
-		$message = $data[0];
-	}
 	if(is_string($data)) {
 		$message = $data;
 	}
 
 	$logLevel = "INFO";
-	$logger = Log::get();
+	$logger = LoggerFactory::get($this);
 	foreach ($this->_errorLogLevels as $key => $value) {
 		if(in_array($code, $value)) {
-			$logLevel = $key;	
+			$logLevel = $key;
 		}
 	}
 	$logger->$logLevel($_SERVER["REQUEST_URI"] . " - " . $message);
@@ -170,7 +173,7 @@ private function displayError($code, $data = array("")) {
 								}
 								$m .= "Line: " . $stackI["line"] . "\n";
 								$m .= "File: " . $stackI["file"] . "\n\n";
-								
+
 								$pre->nodeValue = $m;
 								$traceNode->appendChild($pre);
 							}
@@ -196,14 +199,14 @@ private function displayError($code, $data = array("")) {
  * script ends early, sending 301 headers.
  */
 private function checkDirFile() {
-	
+
 }
 
 /**
  * Checks each directory and the current requested file in the URI against the
  * actual directory structure within the PageView directory.
  * Each entry is compared, and any inconsistencies in case are fixed, and then
- * 301 forwarded to the correct URI. 
+ * 301 forwarded to the correct URI.
  * @return bool True if case is correct. Will never return false, as the script
  * ends early, sending 301 headers.
  */

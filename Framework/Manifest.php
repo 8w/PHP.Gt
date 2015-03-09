@@ -78,11 +78,23 @@ public function getFingerprint() {
 					break 2;
 				}
 			}
+			$source = $element->getAttribute($typeDetails["Source"]);
+
+			// Do not add external files to the fingerprint:
+			if(strstr($source, "//")) {
+				break;
+			}
+			// Do not add relative files to the fingerprint:
+			else if(strpos($source, "/") !== 0) {
+				break;
+			}
 
 			// At this point in the loop, this element should be used in the
-			// fingerprinting process.
-			$source = $element->getAttribute($typeDetails["Source"]);
-			$fingerprint .= $source;
+			// fingerprinting process.  Have to fingerprint the whole file not the
+			// path to force the folder name to change and so force the  browser 
+			// to load the new file if any contents have changed
+			$fingerprint .= md5($source);
+
 			$this->_pathArray[] = $source;
 		}
 	}

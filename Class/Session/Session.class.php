@@ -45,7 +45,9 @@ public static function check($ns) {
 
 public static function push($ns, $data) {
 	$existing = self::get($ns);
-	if(!is_array($existing)) {
+	if(is_null($existing)) {
+		$existing = array();
+	} elseif(!is_array($existing)) {
 		$existing = [$existing];
 	}
 
@@ -67,7 +69,9 @@ public static function pop($ns) {
 }
 public static function unshift($ns, $data) {
 	$existing = self::get($ns);
-	if(!is_array($existing)) {
+	if(is_null($existing)) {
+		$existing = array();
+	} elseif(!is_array($existing)) {
 		$existing = [$existing];
 	}
 

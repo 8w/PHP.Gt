@@ -127,36 +127,29 @@ public function __construct($config, $t) {
 		// Look for common PageCode for current directory, also work up the
 		// directory tree and look for and execute higher PageCodes.
 		$pcClassSuffix = "_PageCode";
-		$pcDirArray = array();
 		$pcBaseDir = APPROOT . "/PageCode/";
 		$filePathArray = explode("/", DIR);
+		$folder = "";
+		// put the root folder in the array first
+		$pcDirArray = [ $folder ];
+
 		for($i = 0; $i < count($filePathArray); $i++) {
-			$prefix = "";
-			foreach ($pcDirArray as $pcDir) {
-				$prefix .= $pcDir . "/";
+			$folder .= $filePathArray[$i] . "/";
+
+			// only add it to the path array if it's not the root (which is already added)
+			// - NOTE must add it before the loop not here otherwise it doesn't get 
+			// picked-up on nested folders
+			if($filePathArray[$i] !== "") {
+				$pcDirArray []= $folder;
 			}
-
-			$pcDirArray[] = $prefix . $filePathArray[$i];
 		}
-		$pcDirArray = array_reverse($pcDirArray);
-		if(!in_array("", $pcDirArray)) {
-			$pcDirArray[] = "";
-		}
-
-		// $pcDirArray now contains at least 1 element, which is the
-		// relative directory of the current request, plus the relative
-		// directories moving up the tree to the root directory.
-		// For example: /Shop/NewItems/Item-1.html will become array(
-		// 0 => 'Shop/NewItems', 1 => 'Shop')
-
-		// Reverse array so that common PageCodes are executed in tree order.
-		$pcDirArray = array_reverse($pcDirArray);
 
 		foreach ($pcDirArray as $pcDir) {
 			$pcCommonPath  = APPROOT . "/PageCode/" . $pcDir . "/";
 			$pcCommonFile  = "_Common.php";
 			$pcCommonClass = str_replace("/", "_", $pcDir) 
 				. "_Common";
+			$pcCommonClass = str_replace("__", "_", $pcCommonClass);
 			if(file_exists($pcCommonPath . $pcCommonFile)) {
 				require_once($pcCommonPath . $pcCommonFile);
 				if(class_exists($pcCommonClass)) {
