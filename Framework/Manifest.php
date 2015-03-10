@@ -60,7 +60,9 @@ public function getFingerprint() {
 		return $this->_fingerprint;
 	}
 
-	$fingerprint = "";
+	// start with the md5 of all script/style files so we invalidate if
+	// any of them has changed
+	$fingerprint = FileOrganiser::organiseStyleScriptFiles(true);
 
 	$this->_pathArray = array();
 	$elementList = $this->getAllHeadElements();
@@ -98,22 +100,12 @@ public function getFingerprint() {
 			// fingerprinting process.  Have to fingerprint the whole file not the
 			// path to force the folder name to change and so force the  browser
 			// to load the new file if any contents have changed
-			$sourcePath = APPROOT . $source;
-			if(!is_readable($sourcePath)) {
-				// check to see if the file is in the PHP.Gt directory
-				$sourcePath = APPROOT . "/PHP.Gt" . $source;
-			}
 
-			if(is_readable($sourcePath)) {
-				// md5 both the file contents and its path to make sure we don't have
-				// any accidental clashes (remember it's only the file listed in the
-				// head that's fingerprinted, not any @includes etc)
-				$fingerprint .= md5_file($sourcePath) . md5($sourcePath);
-				$this->_pathArray[] = $source;
-
-			} else {
-				$logger->warning("Header file $source not found in project or PHP.Gt dirs");
-			}
+			// md5 the path to make sure we don't have
+			// any accidental clashes (remember it's only the file listed in the
+			// head that's fingerprinted, not any @includes etc)
+			$fingerprint .= md5(APPROOT . $source);
+			$this->_pathArray[] = $source;
 		}
 	}
 

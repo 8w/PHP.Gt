@@ -1,10 +1,11 @@
 <?php final class FileOrganiser {
 private $_manifest;
-private $_styleScriptFilesCache;
+private static $_styleScriptFilesCache = "/www/StyleScriptFiles.cache";
+private $_assetFilesCache;
+private static $_styleScriptFilesMD5 = null;
 
 public function __construct($manifest) {
 	$this->_manifest = $manifest;
-	$this->_styleScriptFilesCache = APPROOT . "/www/StyleScriptFiles.cache";
 	$this->_assetFilesCache = APPROOT . "/www/AssetFiles.cache";
 }
 
@@ -25,7 +26,7 @@ public function organise($forceCompile = false) {
 	$styleScriptFilesCacheValid = $this->isStyleScriptFilesCacheValid();
 	if(!$styleScriptFilesCacheValid) {
 		$this->flushCache();
-		$this->organiseStyleScriptFiles();
+		self::organiseStyleScriptFiles();
 		$copyingDone = true;
 	}
 
@@ -70,7 +71,7 @@ public function isAssetFilesCacheValid() {
 
 	$md5Array = array();
 	$outputArray = FileSystem::loopDir($assetDir, $assetWwwDir,
-	[$this, "iterateMd5"], false);
+	["FileOrganiser", "iterateMd5"], false);
 
 	$md5Array = array_merge($md5Array, $outputArray);
 	foreach ($md5Array as $m) {
@@ -112,12 +113,12 @@ private function copyAssets($dryRun = false) {
  * @return bool True for valid cache, false for invalid.
  */
 public function isStyleScriptFilesCacheValid() {
-	if(!is_file($this->_styleScriptFilesCache)) {
+	if(!is_file(APPROOT . self::$_styleScriptFilesCache)) {
 		return false;
 	}
 
-	$currentMd5 = trim(file_get_contents($this->_styleScriptFilesCache));
-	$md5 = $this->organiseStyleScriptFiles(true);
+	$currentMd5 = trim(file_get_contents(APPROOT . self::$_styleScriptFilesCache));
+	$md5 =self::organiseStyleScriptFiles(true);
 
 	return $currentMd5 === $md5;
 }
@@ -126,8 +127,8 @@ public function isStyleScriptFilesCacheValid() {
  * Removes all cached Script & Style files from within www.
  */
 private function flushCache() {
-	if(file_exists($this->_styleScriptFilesCache)) {
-		unlink($this->_styleScriptFilesCache);
+	if(file_exists(APPROOT . self::$_styleScriptFilesCache)) {
+		unlink(APPROOT . self::$_styleScriptFilesCache);
 	}
 
 	$globArray = [
@@ -157,7 +158,11 @@ private function flushCache() {
  * @param $dryRun bool Optional. True to skip copy action.
  * @return string The md5 representation of source Style directories.
  */
-private function organiseStyleScriptFiles($dryRun = false) {
+public static function organiseStyleScriptFiles($dryRun = false) {
+	if($dryRun === true && self::$_styleScriptFilesMD5 !== null) {
+		return self::$_styleScriptFilesMD5;
+	}
+
 	$dirArray = [
 		APPROOT . "/Style",
 		GTROOT . "/Style",
@@ -176,7 +181,7 @@ private function organiseStyleScriptFiles($dryRun = false) {
 		}
 
 		$outputArray = FileSystem::loopDir($dir, $wwwStyleDir,
-		[$this, "iterateMd5"], !$dryRun);
+		["FileOrganiser", "iterateMd5"], !$dryRun);
 
 		$md5Array = array_merge($md5Array, $outputArray);
 	}
@@ -187,13 +192,14 @@ private function organiseStyleScriptFiles($dryRun = false) {
 	$md5 = md5($md5);
 
 	if(!$dryRun) {
-		file_put_contents($this->_styleScriptFilesCache, $md5);
+		file_put_contents(APPROOT . self::$_styleScriptFilesCache, $md5);
 	}
 
+	self::$_styleScriptFilesMD5 = $md5;
 	return $md5;
 }
 
-public function iterateMd5($item, $iterator, $innerDir, $doCopy) {
+public static function iterateMd5($item, $iterator, $innerDir, $doCopy) {
 	if($item->isDir()) {
 		return;
 	}
