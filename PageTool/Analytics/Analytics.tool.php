@@ -1,4 +1,13 @@
-<?php class Analytics_PageTool extends PageTool {
+<?php
+use RoadTest\Utility\Logger\LoggerFactory;
+
+class Analytics_PageTool extends PageTool {
+
+private static $CUSTOM_DIMENSION_KEY = "Gt.Analytics.customDimensions";
+private static $END_SESSION_KEY = "Gt.Analytics.endSession";
+const USER_TYPE = "dimension1";
+const BRANDING = "dimension2";
+
 /**
  * Google Analytics.
  * This simple PageTool doesn't have any functionality in the go() method.
@@ -10,19 +19,47 @@ public function go($api, $dom, $template, $tool) { }
  * Injects the required JavaScript code where needed to start tracking using
  * Google Analytics.
  *
- * @param string $trackingCode Your Google Analytics account code, looks like 
+ * @param string $trackingCode Your Google Analytics account code, looks like
  * this: UA-12345678-1
  */
 public function track($trackingCode) {
+	$logger = LoggerFactory::get($this);
+	$responseCode = http_response_code();
+
+	if($responseCode >= 300 && $responseCode < 400) {
+		// don't bother going any further - this is a redirect
+		return;
+	}
+
 	if(!$this->_dom instanceof Dom) {
 		// No dom initialised... can't track.
 		return;
 	}
+
 	$js = file_get_contents(dirname(__FILE__) . "/Include/Analytics.tool.js");
 	if($js === false) {
-		throw new HttpError(500, "Google Analytics script failure");
+		$logger->error("Couldn't find Google Analytics script!");
+		return;
 	}
+
 	$js = str_replace("{ANALYTICS_CODE}", $trackingCode, $js);
+
+	$customDimensions = Session::get(self::$CUSTOM_DIMENSION_KEY);
+	if($customDimensions !== null) {
+		foreach ($customDimensions as $key => $value) {
+			// $logger->debug("Setting GA custom dimension '$key' to '$value'");
+			$js .= "
+				ga('set', '{$key}', '{$value}');";
+		}
+
+		Session::delete(self::$CUSTOM_DIMENSION_KEY);
+	}
+
+	if(Session::get(self::$END_SESSION_KEY) === true) {
+		$js .= "
+			ga('send', 'pageview', {'sessionControl': 'start'}); ";
+			Session::delete(self::$END_SESSION_KEY);
+	}
 
 	$scriptToInsertBefore = null;
 	$existingScript = $this->_dom["head > script"];
@@ -31,12 +68,21 @@ public function track($trackingCode) {
 	}
 
 	$script = $this->_dom->createElement(
-		"script", 
+		"script",
 		["data-PageTool" => "Analytics"],
-		$js
+		// finish-up with the send command
+		$js . "
+			ga('send', 'pageview');"
 	);
 
 	$this->_dom["head"]->insertBefore($script, $scriptToInsertBefore);
 }
 
+public function customDimension($name, $value) {
+	Session::set(self::$CUSTOM_DIMENSION_KEY . ".{$name}", $value);
+}
+
+public function endSession() {
+	Session::set(self::$END_SESSION_KEY, true);
+}
 }#
