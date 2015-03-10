@@ -99,22 +99,21 @@ public function getFingerprint() {
 			// path to force the folder name to change and so force the  browser
 			// to load the new file if any contents have changed
 			$sourcePath = APPROOT . $source;
+			if(!is_readable($sourcePath)) {
+				// check to see if the file is in the PHP.Gt directory
+				$sourcePath = APPROOT . "/PHP.Gt" . $source;
+			}
+
 			if(is_readable($sourcePath)) {
 				// md5 both the file contents and its path to make sure we don't have
 				// any accidental clashes (remember it's only the file listed in the
 				// head that's fingerprinted, not any @includes etc)
 				$fingerprint .= md5_file($sourcePath) . md5($sourcePath);
+				$this->_pathArray[] = $source;
+
 			} else {
-				$sourcePath = APPROOT . "/PHP.Gt" . $source;
-
-				if(is_readable($sourcePath)) {
-					$fingerprint .= md5_file($sourcePath) . md5($sourcePath);
-				} else {
-					$logger->warning("Heading file $source not found");
-				}
+				$logger->warning("Header file $source not found in project or PHP.Gt dirs");
 			}
-
-			$this->_pathArray[] = $source;
 		}
 	}
 
