@@ -52,9 +52,11 @@ public function getDomHead() {
  * client-side assets.
  */
 public function getFingerprint() {
+	$logger = LoggerFactory::get($this);
 	// End early if all work has already been done.
 	if(!is_null($this->_fingerprint)
 	&& !is_null($this->_pathArray)) {
+
 		return $this->_fingerprint;
 	}
 
@@ -98,10 +100,18 @@ public function getFingerprint() {
 			// to load the new file if any contents have changed
 			$sourcePath = APPROOT . $source;
 			if(is_readable($sourcePath)) {
-				$fingerprint .= md5_file($sourcePath);
+				// md5 both the file contents and its path to make sure we don't have
+				// any accidental clashes (remember it's only the file listed in the
+				// head that's fingerprinted, not any @includes etc)
+				$fingerprint .= md5_file($sourcePath) . md5($sourcePath);
 			} else {
-				LoggerFactory::get($this)->warning(
-					"Heading file $source not found");
+				$sourcePath = APPROOT . "/PHP.Gt" . $source;
+
+				if(is_readable($sourcePath)) {
+					$fingerprint .= md5_file($sourcePath) . md5($sourcePath);
+				} else {
+					$logger->warning("Heading file $source not found");
+				}
 			}
 
 			$this->_pathArray[] = $source;
