@@ -314,7 +314,7 @@ public function executePayment() {
 			. "Are you trying to execute the payment twice?");
 	}
 	else {
-		$logger->fatal($curl_result);
+		$logger->critical($curl_result);
 		throw new Exception("PayPal PageTool payment execution error.");
 	}
 }

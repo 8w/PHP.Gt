@@ -21,11 +21,11 @@ private $_errorCodeMessage = array(
 );
 
 private $_errorLogLevels = array(
-	"TRACE" => [301, 302, ],
-	"INFO" => [400, 401, 403, 404, ],
-	"WARN" => [408, 410, ],
-	"ERROR" => [429, ],
-	"FATAL" => [500, 501, 503, ],
+	"debug" => [301, 302, ],
+	"info" => [400, 401, 403, 404, ],
+	"warning" => [408, 410, ],
+	"error" => [429, ],
+	"emergency" => [500, 501, 503, ],
 );
 
 
