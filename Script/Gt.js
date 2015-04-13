@@ -17,7 +17,7 @@
  *
  * On top of the browser normalisation, helper functions are added to global
  * scope and to DOM objects:
- * 
+ *
  * go([namespace], [callback], [page])
  * All parameters are optional. If namespace is provided as a string, the
  * namespace will be initialised and optional callback will be executed in
@@ -46,7 +46,7 @@
  * functionality of the returned NodeList object, so that methods and properties
  * of each DOMNode can be invoked/accessed via the NodeList itself. Example:
  * dom("body > p").addClass("root"); // adds "root" to all root paragraphs.
- * 
+ *
  * template(name)
  * Any elements with data-template attributes will be extracted from the DOM
  * and are clonable using this function. The extraction of elements will be done
@@ -67,12 +67,12 @@ var g=void 0,h=!0,i=null,l=!1,m=window,n,q=Object.prototype,aa=Function.prototyp
 /* GT.js core library. | @version 0.2 | Apache2 License | github.com/g105b */
 ;(function() {
 
-var 
+var
 // List of callbacks to invoke on DOM ready event. Added to the list using
 // public go() function.
 _goQueue = [],
 // Map of elements that have been extracted from the DOM due to having a
-// data-template attribute. 
+// data-template attribute.
 _templateMap = {},
 // Functions that are added to object prototypes. Prior to these being added,
 // browsers' objects are all normalised to support ES5 and some ES6 standards.
@@ -81,7 +81,7 @@ _templateMap = {},
 _helpers = {
 	"Node": {
 		/**
-		 * Will append the given string to all attributes of given name within 
+		 * Will append the given string to all attributes of given name within
 		 * the current collection.
 		 * @param {string} attr The attribute to append to.
 		 * @param {string} data The data to append with.
@@ -118,7 +118,7 @@ _helpers = {
 					return currentElement;
 				}
 			}while(currentElement);
-			
+
 			return null;
 		},
 		/**
@@ -172,12 +172,12 @@ _helpers = {
 },
 
 /**
- * NodeList helpers are Node methods that are exposed on the NodeList 
- * prototype. When called, they will either be invoked on the first Node or 
- * on all nodes within the list (depending on 'first' or 'all' within this 
+ * NodeList helpers are Node methods that are exposed on the NodeList
+ * prototype. When called, they will either be invoked on the first Node or
+ * on all nodes within the list (depending on 'first' or 'all' within this
  * object).
  *
- * List of properties/methods from: 
+ * List of properties/methods from:
  * https://developer.mozilla.org/en-US/docs/DOM/element
  */
 _nodeListHelpers = {
@@ -332,7 +332,7 @@ _addNodeListHelpers = function() {
 				else if(c_helperType === "methods") {
 					NodeList.prototype[c_fnName] = function() {
 						return this.item(0)[c_fnName].apply(
-							this.item(0), 
+							this.item(0),
 							arguments);
 					};
 				}
@@ -348,7 +348,7 @@ _addNodeListHelpers = function() {
 						"get": function() {
 							return this.item(0)[c_fnName];
 						},
-						"set": function(val) {							
+						"set": function(val) {
 							var elLen = this.length,
 								el_i = 0, result;
 							for(; el_i < elLen; el_i++) {
@@ -370,7 +370,7 @@ _addNodeListHelpers = function() {
 						}
 
 						return result;
-					};				
+					};
 				}
 			})(fnName, helperType);
 		}
@@ -421,13 +421,13 @@ api = function(name, method, properties, callback) {
 
 /**
  * Shorthand function for document.querySelectorAll, takes optional second
- * parameter that switches context from document, for performing qsa on 
+ * parameter that switches context from document, for performing qsa on
  * sub-nodes.
  * @param  {string} selector CSS selector to perform on context
  * @param  {HTMLElement} context  Optional. By default, document is used.
  * @return {NodeList}          NodeList of selected elements.
  */
-dom = function(selector, context) { 
+dom = function(selector, context) {
 	if(!context) {
 		context = document;
 	}
@@ -462,18 +462,18 @@ tool = function(name) {
 },
 
 /**
- * Provides shorthand to XMLHttpRequest functionality. 
+ * Provides shorthand to XMLHttpRequest functionality.
  * @param  {string} url 		The URL to request.
  * @param  {string} method 		Optional. The HTTP method to use. Defaults to
  * GET. Possible values: GET, POST, PUT, DELETE, HEAD.
  * @param  {object} properties 	Key-value-pairs to send in the request. The
- * values will be placed in the URL or body where necessary for the given 
+ * values will be placed in the URL or body where necessary for the given
  * method, or merged with existing query parameters if required.
  * @param  {function} callback	A function to invoke when response is made. The
  * function will be invoked in the context of the XMLHttpRequest object, so
  * `this` will can be used to get status code, etc.
  * @param {XMLHttpRequest} xhr An existing XMLHttpRequest object to use.
- * @return {XMLHttpRequest}     The actual XMLHttpRequest object used in the 
+ * @return {XMLHttpRequest}     The actual XMLHttpRequest object used in the
  * request.
  */
 http = function(url /*,[method],[properties],[callback],[xhr],[responseType]*/){
@@ -500,7 +500,7 @@ http = function(url /*,[method],[properties],[callback],[xhr],[responseType]*/){
 				xhr = arguments[arg_i]
 			}
 			else {
-				properties = arguments[arg_i];				
+				properties = arguments[arg_i];
 			}
 		}
 		else if(typeof arguments[arg_i] == "function") {
@@ -523,7 +523,7 @@ http = function(url /*,[method],[properties],[callback],[xhr],[responseType]*/){
 
 	qsProperties = {};
 	if(method == "get" || method == "delete") {
-		// Properties must be in the query string. 
+		// Properties must be in the query string.
 		qsChar = "?";
 		if(url.indexOf("?") >= 0) {
 			qsChar = "&";
@@ -578,7 +578,7 @@ http = function(url /*,[method],[properties],[callback],[xhr],[responseType]*/){
 			}
 			formData.append(prop, properties[prop]);
 		}
-		
+
 		xhr.send(formData);
 	}
 	else {
@@ -617,7 +617,7 @@ randDeviation = function(num, deviation, intsOnly) {
 
 /**
  * Extracts all elements from the DOM that have the data-template attribute,
- * or elements that are children of the PhpGt_Template_Element element (added 
+ * or elements that are children of the PhpGt_Template_Element element (added
  * by PHP.Gt projects). Elements are stored in the _templateMap	object.
  */
 _templateLoad = function() {
@@ -684,7 +684,7 @@ _attachHelpers = function() {
 _goListen = function() {
 	document.addEventListener("DOMContentLoaded", function() {
 		document.removeEventListener(
-			"DOMContentLoaded", 
+			"DOMContentLoaded",
 			arguments.callee,
 			false
 		);
@@ -698,7 +698,7 @@ _goListen = function() {
  * optional page can be supplied that will only invoke matching pages. This
  * adds the functionality of calling window.go() at any time to invoke a go
  * script for another page (such as for an ajax response).
- * 
+ *
  * @param {string|RegExp} page Optional. The page to invoke go queue upon.
  * @return {int} Number of callbacks invoked.
  */
@@ -733,15 +733,15 @@ _goInvoke = function(pageContext) {
 /**
  * Used to call a function after the page loads, with an optional context of a
  * namespace, and with an optional invoke conditional on the current pathname.
- * If only one argument is given as a string, the go queue will be invoked as 
+ * If only one argument is given as a string, the go queue will be invoked as
  * if the browser has just reached the page with the string as the URL.
- * 
- * @param  {String} ns			Optional. The name of a namespace to invoke the 
+ *
+ * @param  {String} ns			Optional. The name of a namespace to invoke the
  * given function in context of - existing or requiring initialisation.
- * @param  {Function} cb		The only required parameter. Reference to the 
+ * @param  {Function} cb		The only required parameter. Reference to the
  * function to invoke. Without a given namespace, it will be invoked in
  * anonymous context.
- * @param {String|RegExp} page	Either a string or regular expression matching 
+ * @param {String|RegExp} page	Either a string or regular expression matching
  * pathnames to only invoke the function on.
  * @return {Bool}				True if page matches pathname, else false.
  */
@@ -803,7 +803,6 @@ window.rand = rand;
 window.randDeviation = randDeviation;
 
 // Invoke functions to start.
-go(_templateLoad);
 _addNodeListHelpers();
 _attachHelpers();
 _goListen();

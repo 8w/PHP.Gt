@@ -1,13 +1,13 @@
 <?php class Dom implements ArrayAccess {
 /**
- * The first purpose of the `Dom` object is automatic parsing of the PageView 
- * files. When the object is constructed, it takes the raw HTML string loaded 
+ * The first purpose of the `Dom` object is automatic parsing of the PageView
+ * files. When the object is constructed, it takes the raw HTML string loaded
  * from the PageView(s) and constructs a native `DomDocument` to represent.
  *
- * This is the object that is actually passed into all `go()` method calls as 
- * the `$dom` object, and can be treated as a native PHP `DOMDocument` with 
- * extended methods and properties. The class doesn't _actually_ inherit from 
- * the `DOMDocument` class, instead it exposes the properties and methods of 
+ * This is the object that is actually passed into all `go()` method calls as
+ * the `$dom` object, and can be treated as a native PHP `DOMDocument` with
+ * extended methods and properties. The class doesn't _actually_ inherit from
+ * the `DOMDocument` class, instead it exposes the properties and methods of
  * the underlying object through magic methods (`_call`, `_get` and `_set`).
  */
 private $_domDoc = null;
@@ -70,7 +70,7 @@ public function __construct($html = "<!doctype html>") {
 
 /**
  * Removes any elements from the DOM that have a data-lang attribute that
- * doesn't match the cookie's lang value or the HTML's default lang. 
+ * doesn't match the cookie's lang value or the HTML's default lang.
  */
 public function languageScrape($attr = "data-lang") {
 	$xpath = new DOMXPath($this->_domDoc);
@@ -84,7 +84,7 @@ public function languageScrape($attr = "data-lang") {
 		if(empty($_COOKIE["Lang"])) {
 			if(!fnmatch($this->_defaultLanguage, $itemLang)) {
 				$item->parentNode->removeChild($item);
-			}			
+			}
 		}
 		else {
 			if($itemLang != $_COOKIE["Lang"]) {
@@ -95,7 +95,7 @@ public function languageScrape($attr = "data-lang") {
 }
 
 /**
- * Allows plain text to be included in from other areas of the PageView 
+ * Allows plain text to be included in from other areas of the PageView
  * directory structure.
  * @param  string $html The original HTML.
  * @return string       The newly injected HTML.
@@ -120,7 +120,7 @@ private function includeHtml($html) {
 				$path .= "/" . $includeFile;
 			}
 			else {
-				$path .= "/" . DIR . "/" . $includeFile;			
+				$path .= "/" . DIR . "/" . $includeFile;
 			}
 		}
 
@@ -158,7 +158,7 @@ public function __call($name, $args) {
 
 		return $result;
 	}
-} 
+}
 
 /**
  * Allows automatic property mapping to the DOMDocument node.
@@ -185,13 +185,13 @@ public function offsetExists($selector) {
 }
 
 /**
-* Returns a list of Dom elements (type DomEl) that match the 
+* Returns a list of Dom elements (type DomEl) that match the
 * provided CSS selector.
 * @param string $selector CSS selector to match.
 * @param DOMNode|DomEl $contextNode Optional. The sub-node to query.
 * @return DomElCollection A list of matching DomEl objects.
 */
-public function offsetGet($selector, $contextNode = null, 
+public function offsetGet($selector, $contextNode = null,
 $overrideXpath = false) {
 	if(!is_null($contextNode)) {
 		if($contextNode instanceof DomEl) {
@@ -232,7 +232,7 @@ public function offsetSet($selector, $value) {
 	$current = $this[$selector];
 	$current->before($value);
 	$current->remove();
-	
+
 	return $current;
 }
 
@@ -323,7 +323,7 @@ public function template($attribute = "data-template") {
 			$templateName = $item->getAttribute("id");
 		}
 		else {
-			$templateName = $item->getAttribute($attribute);			
+			$templateName = $item->getAttribute($attribute);
 		}
 
 		if(isset($domNodeArray[$templateName])) {
@@ -361,7 +361,7 @@ public function templateOutput($templateWrapper) {
 		$templateDiv->append($domNodeCollection->cloneNodes());
 		$body->append($templateDiv);
 	}
-	
+
 	$domNodeCollection->map(function(&$element, $key, $c_attribute) {
 		$element->removeAttribute($c_attribute);
 	}, $this->_templateAttribute);
@@ -369,7 +369,7 @@ public function templateOutput($templateWrapper) {
 
 /**
  * Loops over all elements in current DOM. Those who's attribute value
- * matches a key in the $data object will have their value set to the 
+ * matches a key in the $data object will have their value set to the
  * value of the data key.
  * @param array|DalResult $data The dataset to use.
  * @param string $elementSelector Optional. The CSS selector to match on

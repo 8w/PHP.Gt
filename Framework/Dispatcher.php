@@ -1,6 +1,6 @@
 <?php final class Dispatcher {
-/** 
-* The dispatcher is used to link the Response, Request and PageCode objects, 
+/**
+* The dispatcher is used to link the Response, Request and PageCode objects,
 * and call all related events in the correct order. The main aim of dispatching
 * events like this is to only pass around required data, so objects only have
 * access to exactly what they need.
@@ -16,7 +16,7 @@ public function __construct($response, $config) {
 	// Start building the objects used across the PageCodes...
 	$apiWrapper = new ApiWrapper($dal);
 	$emptyObject = new EmptyObject();
-	
+
 	if($response->mtimeView === false) {
 		// There is no PageView! Allow PageCode's go function to be invoked,
 		// but there's no need to pass in any Dom, Template or Tool.
@@ -37,7 +37,7 @@ public function __construct($response, $config) {
 	}
 
 	// Load the DOM from the current buffer, include any externally linked
-	// PageViews from <include> tags. 
+	// PageViews from <include> tags.
 	$dom = new Dom($response->getBuffer());
 	$response->addMetaData($dom);
 
@@ -74,13 +74,14 @@ public function __construct($response, $config) {
 		$dom,
 		$templateWrapper,
 		$toolWrapper);
-	
+
 	$domHead = $dom["head"][0];
 	$manifest = new Manifest($domHead);
 	$fileOrganiser = new FileOrganiser($manifest);
 	$fileOrganiser->organise();
 
-	$dom->templateOutput($templateWrapper);
+	// don't put the templates back into the dom
+	// $dom->templateOutput($templateWrapper);
 	return $dom->flush();
 }
 
