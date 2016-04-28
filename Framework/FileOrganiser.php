@@ -263,6 +263,11 @@ private function processCopy($forceCompile = false) {
 
 		$ext = pathinfo($destinationPath, PATHINFO_EXTENSION);
 
+		// if there's a sass sourcemap file, copy that too
+		if($ext === "css" && file_exists($sourcePath . ".map")) {
+			copy("{$sourcePath}.map", APPROOT . "/www{$destination}.map");
+		}
+
 		if(!isset($processedArray[$ext])) {
 			$processedArray[$ext] = array();
 		}
