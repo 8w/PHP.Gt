@@ -132,7 +132,7 @@ $toLoad["Required"] = array(
 		GTROOT."/Config/Security.cfg.php",
 
 	"Error Exception" => 
-		GTROOT."/Framework/Error/Error.php",
+		GTROOT."/Framework/Error/GTError.php",
 	"Error Handler" => 
 		GTROOT."/Framework/Error/ErrorHandler.php",
 	"Http Error Exception" => 
