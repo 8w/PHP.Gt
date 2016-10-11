@@ -75,7 +75,7 @@ $baseDir = ($slashPos === false)
 // For finding the correct PageCode and PageView, on different systems.
 $dirPath = str_replace("/", DS, $dirName);
 $filePath = $dirName . DS . $fileName;
-while($filePath[0] == DS) { 
+while($filePath[0] == DS) {
 	$filePath = substr($filePath, 1);
 }
 $fileClass = str_replace(DS, "_", $filePath);
@@ -87,18 +87,13 @@ $appName = strstr($cwd, ".")
 	: $cwd;
 
 $pageUrl = (empty($_SERVER["HTTPS"]))
-	? "http://" 
+	? "http://"
 	: "https://";
-if($_SERVER["SERVER_PORT"] != "80") {
-	$pageUrl .= $_SERVER["SERVER_NAME"] . ":" . $_SERVER["SERVER_PORT"]
-	. $_SERVER["REQUEST_URI"];
-}
-else {
-	$pageUrl .= $_SERVER["SERVER_NAME"] . $_SERVER["REQUEST_URI"];
-}
+
+$pageUrl .= $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
 
 if(empty($dirName)) {
-	$path = "$fileName";	
+	$path = "$fileName";
 }
 else {
 	$path = "$dirName/$fileName";
@@ -118,40 +113,40 @@ define("FILECLASS",	$fileClass);
 define("FILEPATH",	$filePath);
 
 // Define the minimum required files to run the framework. The path of each
-// requirement can be an array of paths, in order of priority (for version 
+// requirement can be an array of paths, in order of priority (for version
 // compatibility).
 $toLoad = array();
 $toLoad["Required"] = array(
 	"Config interface" =>
 		GTROOT."/Config/Config.cfg.php",
-	"Shared application config" => 
+	"Shared application config" =>
 		GTROOT."/Config/App.cfg.php",
-	"Shared database config" => 
+	"Shared database config" =>
 		GTROOT."/Config/Database.cfg.php",
-	"Shared security config" =>	
+	"Shared security config" =>
 		GTROOT."/Config/Security.cfg.php",
 
-	"Error Exception" => 
+	"Error Exception" =>
 		GTROOT."/Framework/Error/GTError.php",
-	"Error Handler" => 
+	"Error Handler" =>
 		GTROOT."/Framework/Error/ErrorHandler.php",
-	"Http Error Exception" => 
+	"Http Error Exception" =>
 		GTROOT."/Framework/Error/HttpError.php",
 
-	"API component" => 
+	"API component" =>
 		GTROOT."/Framework/Component/Api.php",
-	"API wrapper component" => 
+	"API wrapper component" =>
 		GTROOT."/Framework/Component/ApiWrapper.php",
-	"API element component" => 
+	"API element component" =>
 		GTROOT."/Framework/Component/ApiEl.php",
-	"Template wrapper component" => 
+	"Template wrapper component" =>
 		GTROOT."/Framework/Component/TemplateWrapper.php",
 	"PageTool wrapper component" =>
 		GTROOT."/Framework/Component/PageToolWrapper.php",
 	"DAL component" =>
 		GTROOT."/Framework/Component/Dal.php",
 	"DAL element component" =>
-		GTROOT."/Framework/Component/DalEl.php", 
+		GTROOT."/Framework/Component/DalEl.php",
 	"DAL result component" =>
 		GTROOT."/Framework/Component/DalResult.php",
 	"DOM component" =>
@@ -197,9 +192,9 @@ $toLoad["Required"] = array(
 $toLoad["Optional"] = array(
 	"Application-specific application config" =>
 		APPROOT."/Config/App.cfg.php",
-	"Application-specific database config" => 
+	"Application-specific database config" =>
 		APPROOT."/Config/Database.cfg.php",
-	"Application-specific security config" => 
+	"Application-specific security config" =>
 		APPROOT."/Config/Security.cfg.php",
 	"The application's Composer autoloader file" =>
 		APPROOT . "/Class/vendor/autoload.php",
@@ -216,8 +211,8 @@ foreach($toLoad as $requirement => $loadArray) {
 			else {
 				if($requirement === "Optional") {
 					continue;
-				} 
-				
+				}
+
 				if($i === $pathLen - 1) {
 					die("PHP.Gt cannot load, the $title file cannot be found.");
 				}
@@ -227,19 +222,19 @@ foreach($toLoad as $requirement => $loadArray) {
 }
 
 if(isset($_GET["DebugBootstrap"])) {
-	// If you don't trust your webserver has been set up correctly, have a look 
+	// If you don't trust your webserver has been set up correctly, have a look
 	// through the output of this code block:
 	echo "PathInfo: " . PHP_EOL;
 	var_dump($pathInfo);
 
 	echo "Constants: " . PHP_EOL;
 	echo "<pre>";
-	echo "CWD: "	. $cwd		. PHP_EOL 
+	echo "CWD: "	. $cwd		. PHP_EOL
 	. "VER: "		. VER		. PHP_EOL
 	. "APPNAME: "	. APPNAME	. PHP_EOL
 	. "GTROOT: "	. GTROOT	. PHP_EOL
 	. "APPROOT: "	. APPROOT	. PHP_EOL
-	. "DS: "		. DS		. PHP_EOL 
+	. "DS: "		. DS		. PHP_EOL
 	. PHP_EOL
 	. "DIR: "		. DIR		. PHP_EOL
 	. "BASEDIR: "	. BASEDIR	. PHP_EOL

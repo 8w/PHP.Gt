@@ -1,7 +1,7 @@
 <?php class Auth {
 /**
  * Auth provides a simple wrapper to the HybridAuth library. To use, pass an
- * array of provider names with id/secret pairs into the Auth constructor and 
+ * array of provider names with id/secret pairs into the Auth constructor and
  * call the login/logout functions when needed.
  *
  * When using one (or arbitary) login providers, user profile properties can be
@@ -11,7 +11,7 @@
  * responsibility to record the authenticated details against the session or
  * User PageTool's uuid in order to offer persistent login.
  *
- * Example: 
+ * Example:
  * $providers = array(
  *     "Google" => ["id" => "1234", "secret" => 5678],
  *     "Twitter" => ["id" => "1234", "secret" => 5678],
@@ -27,7 +27,7 @@
  *     // Do something with their data, like this:
  *     $message = "Hello, " . $auth->firstName;
  * }
- * 
+ *
  * http://hybridauth.sourceforge.net
  */
 
@@ -38,7 +38,7 @@ public $config = array(
 
 	"providers" => array(),
 
-	// if you want to enable logging, set 'debug_mode' to true then provide a 
+	// if you want to enable logging, set 'debug_mode' to true then provide a
 	// writable file by the web server on "debug_file"
 	"debug_mode" => false,
 	"debug_file" => "",
@@ -52,10 +52,10 @@ private $profile = null;
 
 public function __construct($providerConfig = array()) {
 	if(empty($this->config["base_url"])) {
-		$this->config["base_url"] = 
+		$this->config["base_url"] =
 			"http" . (empty($_SERVER["HTTPS"]) ? "" : "s")
 			. "://"
-			. $_SERVER["SERVER_NAME"]
+			. $_SERVER["HTTP_HOST"]
 			. "/";
 	}
 
@@ -64,7 +64,7 @@ public function __construct($providerConfig = array()) {
 			// Lower-case the ID key if supplied in upper-case.
 			$pDetails["id"] = $pDetails["ID"];
 		}
-		
+
 		// Remove the id/key ambiguity.
 		if(isset($pDetails["id"])) {
 			$pDetails["key"] = $pDetails["id"];
@@ -134,15 +134,15 @@ public function authenticate($provider) {
 			$error = "Authentication failed. The user has canceled the "
 				. "authentication or the provider refused the connection.";
 			break;
-		case 6: 
+		case 6:
 			$error = "User profile request failed. Most likely the user is "
 				. "not connected to the provider and he should to "
 				. "authenticate again.";
 			$this->adapter->logout();
 			break;
 		case 7:
-			$error = "User not connected to the provider."; 
-			$this->adapter->logout(); 
+			$error = "User not connected to the provider.";
+			$this->adapter->logout();
 			break;
 		}
 
@@ -205,8 +205,8 @@ public function isConnectedWith($provider) {
 
 /**
  * Allows some wrapper properties to be used for quick data access, but mainly
- * provides shorthand properties to authenticated data. The developer doesn't 
- * need to know which provider is used to be able to obtain the user's name, 
+ * provides shorthand properties to authenticated data. The developer doesn't
+ * need to know which provider is used to be able to obtain the user's name,
  * for example.
  */
 public function __get($name) {
