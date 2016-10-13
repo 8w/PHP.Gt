@@ -1,4 +1,4 @@
-<?php final class DalResult implements Iterator, ArrayAccess, Serializable {
+<?php class DalResult implements Iterator, ArrayAccess, Serializable {
 /**
  * TODO: Docs.
  */
@@ -70,7 +70,7 @@ public function __toString() {
 }
 
 public function serialize() {
-	$this->storeResult(true);	
+	$this->storeResult(true);
 	return serialize($this->result);
 }
 
@@ -111,13 +111,13 @@ public function offsetExists($offset) {
 			return array_key_exists($offset, $this->result[0]);
 		}
 	}
-			
+
 	return array_key_exists($offset, $this->result);
 }
 
 public function offsetGet($offset) {
 	$this->storeResult(true);
-	
+
 	if(!is_numeric($offset)) {
 		if(isset($this->result[0])) {
 			return $this->result[0][$offset];
