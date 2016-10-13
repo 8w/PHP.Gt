@@ -1,4 +1,7 @@
-<?php class DalResult implements Iterator, ArrayAccess, Serializable {
+<?php /**
+ * @property bool|int hasResult
+ */
+class DalResult implements Iterator, ArrayAccess, Serializable {
 /**
  * TODO: Docs.
  */

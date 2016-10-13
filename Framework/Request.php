@@ -2,7 +2,7 @@
 /**
  * Deals with all elements of a page request. The URL is dissected to define
  * which PageViews and PageCodes to load, or which API to serve, depending on
- * extension. If the isCached setting is enabled, the cached version of the 
+ * extension. If the isCached setting is enabled, the cached version of the
  * current request will be used if valid.
  */
 public $api = null;
@@ -30,8 +30,8 @@ public function __construct($config, $t) {
 			// use in apps.
 			setcookie(
 				"Lang",
-				$lang, 
-				time() + (60 * 60 * 24 * 30 * 12), 
+				$lang,
+				time() + (60 * 60 * 24 * 30 * 12),
 				"/");
 			$_COOKIE["Lang"] = $lang;
 		}
@@ -60,12 +60,12 @@ public function __construct($config, $t) {
 		}
 
 		if(isset($_GET["FakeSlow"])) {
-			$_SESSION["FakeSlow"] = $_GET["FakeSlow"];			
+			$_SESSION["FakeSlow"] = $_GET["FakeSlow"];
 		}
 		sleep($seconds);
 	}
 
-	if(EXT == "json") { 
+	if(EXT == "json") {
 		$this->contentType = "application/json";
 
 		// Look for requested API. Note that API requests have to always
@@ -109,8 +109,9 @@ public function __construct($config, $t) {
 			}
 			$this->api->setMethodParams($paramArray);
 
-			if(!method_exists($this->api, lcfirst($methodName)) &&
-			!in_array(ucfirst($methodName), $this->api->externalMethods)) {
+			if(!method_exists($this->api, lcfirst($methodName))) {
+//          commented-out - externalMethods is a protected method so cannot be called
+//			&& !in_array(ucfirst($methodName), $this->api->externalMethods)) {
 				$this->api->setError("Given method either does not exist "
 					. "or requires more parameters.");
 				return;
@@ -137,7 +138,7 @@ public function __construct($config, $t) {
 			$folder .= $filePathArray[$i] . "/";
 
 			// only add it to the path array if it's not the root (which is already added)
-			// - NOTE must add it before the loop not here otherwise it doesn't get 
+			// - NOTE must add it before the loop not here otherwise it doesn't get
 			// picked-up on nested folders
 			if($filePathArray[$i] !== "") {
 				$pcDirArray []= $folder;
@@ -147,13 +148,13 @@ public function __construct($config, $t) {
 		foreach ($pcDirArray as $pcDir) {
 			$pcCommonPath  = APPROOT . "/PageCode/" . $pcDir . "/";
 			$pcCommonFile  = "_Common.php";
-			$pcCommonClass = str_replace("/", "_", $pcDir) 
+			$pcCommonClass = str_replace("/", "_", $pcDir)
 				. "_Common";
 			$pcCommonClass = str_replace("__", "_", $pcCommonClass);
 			if(file_exists($pcCommonPath . $pcCommonFile)) {
 				require_once($pcCommonPath . $pcCommonFile);
 				if(class_exists($pcCommonClass)) {
-					$this->pageCodeCommon[] = 
+					$this->pageCodeCommon[] =
 						new $pcCommonClass($this->pageCodeStop);
 				}
 				else if(class_exists($pcCommonClass . $pcClassSuffix)) {
@@ -187,7 +188,7 @@ public function __construct($config, $t) {
 		$reservedName = BASEDIR == ""
 		? FILE
 		: BASEDIR;
-		$reservedFile = GTROOT . "/Framework/Reserved/" 
+		$reservedFile = GTROOT . "/Framework/Reserved/"
 			. ucfirst($reservedName) . ".php";
 		if(file_exists($reservedFile)) {
 			require($reservedFile);
