@@ -26,7 +26,7 @@ public function track($trackingCode) {
 	$logger = LoggerFactory::get($this);
 	$responseCode = http_response_code();
 
-	if($responseCode >= 300 && $responseCode < 400) {
+    if($responseCode >= 300 && $responseCode < 400) {
 		// don't bother going any further - this is a redirect
 		return;
 	}
@@ -43,23 +43,21 @@ public function track($trackingCode) {
 	}
 
 	$js = str_replace("{ANALYTICS_CODE}", $trackingCode, $js);
-
-	$customDimensions = Session::get(self::$CUSTOM_DIMENSION_KEY);
-	if($customDimensions !== null) {
-		foreach ($customDimensions as $key => $value) {
-			// $logger->debug("Setting GA custom dimension '$key' to '$value'");
+    if(Session::exists(self::$CUSTOM_DIMENSION_KEY)) {
+        $customDimensions = Session::get(self::$CUSTOM_DIMENSION_KEY);
+        foreach ($customDimensions as $key => $value) {
 			$js .= "
 				ga('set', '{$key}', '{$value}');";
 		}
-
-		Session::delete(self::$CUSTOM_DIMENSION_KEY);
 	}
 
 	if(Session::get(self::$END_SESSION_KEY) === true) {
 		$js .= "
 			ga('send', 'pageview', {'sessionControl': 'start'}); ";
-			Session::delete(self::$END_SESSION_KEY);
-	}
+	} else {
+        $js .= "
+			ga('send', 'pageview');";
+    }
 
 	$scriptToInsertBefore = null;
 	$existingScript = $this->_dom["head > script"];
@@ -71,18 +69,19 @@ public function track($trackingCode) {
 		"script",
 		["data-PageTool" => "Analytics"],
 		// finish-up with the send command
-		$js . "
-			ga('send', 'pageview');"
+		$js
 	);
 
 	$this->_dom["head"]->insertBefore($script, $scriptToInsertBefore);
 }
 
-public function customDimension($name, $value) {
-	Session::set(self::$CUSTOM_DIMENSION_KEY . ".{$name}", $value);
+public function customDimension($name, $value)
+{
+    Session::set(self::$CUSTOM_DIMENSION_KEY . ".{$name}", $value);
 }
 
 public function endSession() {
-	Session::set(self::$END_SESSION_KEY, true);
+    Session::delete(self::$CUSTOM_DIMENSION_KEY);
+    Session::set(self::$END_SESSION_KEY, true);
 }
 }#
