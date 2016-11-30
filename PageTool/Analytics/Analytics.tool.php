@@ -7,6 +7,7 @@ class Analytics_PageTool extends PageTool
     const USER_TYPE = "dimension1";
     const BRANDING = "dimension2";
     private static $CUSTOM_DIMENSION_KEY = "Gt.Analytics.customDimensions";
+    private static $EVENT_KEY = "Gt.Analytics.events";
     private static $END_SESSION_KEY = "Gt.Analytics.endSession";
 
     /**
@@ -47,11 +48,42 @@ class Analytics_PageTool extends PageTool
         }
 
         $js = str_replace("{ANALYTICS_CODE}", $trackingCode, $js);
+
+        // send any pending events
+        if (Session::exists(self::$EVENT_KEY)) {
+            $events = Session::get(self::$EVENT_KEY);
+            foreach ($events as $event) {
+                $js .= "
+                    ga('send', {
+                        hitType: 'event',
+                        eventCategory: '{$event["eventCategory"]}',
+                        eventAction:   '{$event["eventAction"]}',
+                        eventLabel:    '{$event["eventLabel"]}',
+                        eventValue:    '{$event["eventValue"]}'
+                    });
+                ";
+
+                $logger->debug(
+                    sprintf("Sending GA event: category=%s, action=%s, label=%s, value=%s",
+                        $event["eventCategory"],
+                        $event["eventAction"],
+                        $event["eventLabel"],
+                        $event["eventValue"]));
+            }
+            // delete them now they've been loaded for send
+            Session::delete(self::$EVENT_KEY);
+        }
+
         if (Session::exists(self::$CUSTOM_DIMENSION_KEY)) {
             $customDimensions = Session::get(self::$CUSTOM_DIMENSION_KEY);
             foreach ($customDimensions as $key => $value) {
                 $js .= "
 				ga('set', '{$key}', '{$value}');";
+
+                $logger->debug(
+                    sprintf("Sending GA custom dimension: %s => %s",
+                        $key,
+                        $value));
             }
         }
 
@@ -82,6 +114,20 @@ class Analytics_PageTool extends PageTool
     public function customDimension($name, $value)
     {
         Session::set(self::$CUSTOM_DIMENSION_KEY . ".{$name}", $value);
+    }
+
+    public function sendEvent(
+        string $eventCategory,
+        string $eventAction,
+        string $eventLabel = null,
+        int $eventValue = null
+    ) {
+        Session::push(self::$EVENT_KEY, [
+            "eventCategory" => $eventCategory,
+            "eventAction" => $eventAction,
+            "eventLabel" => $eventLabel,
+            "eventValue" => $eventValue
+        ]);
     }
 
     public function endSession()
