@@ -6,6 +6,7 @@ class Analytics_PageTool extends PageTool
 
     const USER_TYPE = "dimension1";
     const BRANDING = "dimension2";
+    const ANTI_SPAM = "dimension3";
     private static $CUSTOM_DIMENSION_KEY = "Gt.Analytics.customDimensions";
     private static $EVENT_KEY = "Gt.Analytics.events";
     private static $END_SESSION_KEY = "Gt.Analytics.endSession";
@@ -74,17 +75,20 @@ class Analytics_PageTool extends PageTool
             Session::delete(self::$EVENT_KEY);
         }
 
-        if (Session::exists(self::$CUSTOM_DIMENSION_KEY)) {
-            $customDimensions = Session::get(self::$CUSTOM_DIMENSION_KEY);
-            foreach ($customDimensions as $key => $value) {
-                $js .= "
+        if (!Session::exists(self::$CUSTOM_DIMENSION_KEY)) {
+            // this is a new session so add the custom dimension to filter-out spam entries
+            $this->customDimension(self::ANTI_SPAM, "true");
+        }
+
+        $customDimensions = Session::get(self::$CUSTOM_DIMENSION_KEY);
+        foreach ($customDimensions as $key => $value) {
+            $js .= "
 				ga('set', '{$key}', '{$value}');";
 
-                $logger->debug(
-                    sprintf("Sending GA custom dimension: %s => %s",
-                        $key,
-                        $value));
-            }
+            $logger->debug(
+                sprintf("Sending GA custom dimension: %s => %s",
+                    $key,
+                    $value));
         }
 
         if (Session::get(self::$END_SESSION_KEY) === true) {
