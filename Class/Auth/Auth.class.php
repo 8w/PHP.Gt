@@ -40,8 +40,8 @@ public $config = array(
 
 	// if you want to enable logging, set 'debug_mode' to true then provide a
 	// writable file by the web server on "debug_file"
-	"debug_mode" => false,
-	"debug_file" => "",
+    "debug_mode" => Auth_Config::debug_mode,
+    "debug_file" => Auth_Config::debug_file,
 );
 
 private $_data = null;
