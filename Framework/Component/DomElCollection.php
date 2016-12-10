@@ -6,6 +6,7 @@
  * @since 0.0.1
  */
 private $_dom;
+/** @var array|DomEl|DOMElement|DOMNodeList  */
 private $_elArray;
 private $_index;
 
@@ -51,7 +52,7 @@ public function rewind() {
 	$this->_index = 0;
 }
 
-public function valid() {	
+public function valid() {
 	return isset($this->_elArray[$this->_index]);
 }
 
@@ -101,7 +102,7 @@ public function __call($name, $args) {
 * Returns the requested property from the first contained element. This
 * allows for a more natrual coding style when using CSS selectors to work
 * with selectors only matching one element i.e. $dom["p#main"]->innerText
-* 
+*
 * @param string $key The property name to retrieve.
 *
 * @return mixed The value of the requested property.
@@ -115,7 +116,7 @@ public function __get($key) {
 		}
 		return $frag->childNodes;
 		break;
-		
+
 	case "length":
 		$this->checkElementsInDom();
 		return count($this->_elArray);
@@ -125,14 +126,14 @@ public function __get($key) {
 			// TODO: Properly log and throw error.
 			return;
 		}
-		
+
 		return $this->_elArray[0]->$key;
 		break;
 	}
 }
 
 /**
-* Sets the property named $key of elements within the collection with the 
+* Sets the property named $key of elements within the collection with the
 * provided value.
 *
 * @param string $key The property to set.
@@ -147,7 +148,7 @@ public function __set($key, $value) {
 /**
  * Will append the given string to all attributes of given name within the
  * current collection.
- * 
+ *
  * @param string $attr The attribute to append to.
  * @param string $str The value to append.
  */
@@ -236,7 +237,7 @@ public function shuffle() {
 
 	// Save reference to parent node, while the link exists.
 	$parentNode = $this->_elArray[0]->parentNode;
-	
+
 	// Remove them all from the DOM.
 	foreach ($this->_elArray as $el) {
 		$el->remove();
@@ -252,7 +253,7 @@ public function shuffle() {
 /**
  * Checks if there is a value associated to the given offset within the
  * internal array. This method is usually used internally.
- * 
+ *
  * @param int $index The numerical offset to check.
  *
  * @return bool True if the internal array has the specified index.
@@ -270,7 +271,7 @@ public function offsetExists($index) {
 	else {
 		return false;
 	}
-} 
+}
 
 /**
  * Returns the DomEl at the provided numerical index, or returns the child
@@ -278,7 +279,7 @@ public function offsetExists($index) {
  * $main = $dom["div#main"]; $childSpans = $main["span"];
  *
  * @param int|string $index The numerical index or CSS selector to retrieve.
- * 
+ *
  * @return DomElCollection A new collection of requested element(s).
  */
 public function offsetGet($index) {
@@ -290,10 +291,10 @@ public function offsetGet($index) {
 		if(is_string($index)) {
 			$subElements = array();
 			foreach ($this->_elArray as $element) {
-				$arrayOfMatches = $element[$index]->getElArray(); 
+				$arrayOfMatches = $element[$index]->getElArray();
 				$subElements = array_merge($subElements, $arrayOfMatches);
 			}
-			
+
 			$result = new DomElCollection($this->_dom, $subElements);
 
 			return $result;
@@ -307,12 +308,12 @@ public function offsetGet($index) {
  * This method should be used via ArrayAccess, typically
  * $dom["#OldElement"] = $newElement
  *
- * @param int|string $index The numerical or associative key for internal 
+ * @param int|string $index The numerical or associative key for internal
  * collection.
  * @param DomEl|DomElCollection|array $value The element(s) that will
  * replace the currently contained element(s).
  */
-public function offsetSet($index, $value) {		
+public function offsetSet($index, $value) {
 	// Remove all elements in collection:
 	for($i = 0; $i < $elArrayCount; $i++) {
 		$this->offsetUnset($i);

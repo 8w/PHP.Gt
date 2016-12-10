@@ -9,6 +9,7 @@
  * extended methods and properties. The class doesn't _actually_ inherit from
  * the `DOMDocument` class, instead it exposes the properties and methods of
  * the underlying object through magic methods (`_call`, `_get` and `_set`).
+ * @var DomDocument
  */
 private $_domDoc = null;
 private $_templateAttribute = null;
@@ -306,7 +307,7 @@ public function cacheOutput($output) {
 /**
 * Searches the DOM for elements with the template attribute. All elements
 * get removed from the DOM and stored in an associative array.
-* @return array An array of DomEl objects that have their template attribute
+* @return DomElCollection An array of DomEl objects that have their template attribute
 * values as the array keys.
 */
 public function template($attribute = "data-template") {

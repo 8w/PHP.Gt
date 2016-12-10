@@ -1,13 +1,15 @@
 <?php abstract class PageCode {
 /**
  * PageCode objects are where all user code is executed. This provides a single
- * entry point for each page request's code, and exposes various wrappers 
+ * entry point for each page request's code, and exposes various wrappers
  * utilising dependency injection so that any required code can be executed or
  * triggered from within the PageCode.
  */
 private $_stop;
 
+/** @var ApiWrapper */
 protected $_api			= null;
+/** @var Dom  */
 protected $_dom			= null;
 protected $_template	= null;
 protected $_tool		= null;
