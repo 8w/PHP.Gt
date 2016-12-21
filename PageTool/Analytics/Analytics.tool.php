@@ -91,9 +91,10 @@ class Analytics_PageTool extends PageTool
                     $value));
         }
 
-        if (Session::get(self::$END_SESSION_KEY) === true) {
+        if (Session::exists(self::$END_SESSION_KEY)) {
             $js .= "
 			ga('send', 'pageview', {'sessionControl': 'start'}); ";
+            Session::delete(self::$END_SESSION_KEY);
         } else {
             $js .= "
 			ga('send', 'pageview');";
