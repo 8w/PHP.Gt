@@ -50,12 +50,14 @@ class Analytics_PageTool extends PageTool
 
         $js = str_replace("{ANALYTICS_CODE}", $trackingCode, $js);
 
+        // enable remarketing
+        $js .= "\nga('require', 'displayfeatures');";
+
         // send any pending events
         if (Session::exists(self::$EVENT_KEY)) {
             $events = Session::get(self::$EVENT_KEY);
             foreach ($events as $event) {
-                $js .= "
-                    ga('send', {
+                $js .= "\nga('send', {
                         hitType: 'event',
                         eventCategory: '{$event["eventCategory"]}',
                         eventAction:   '{$event["eventAction"]}',
@@ -82,8 +84,7 @@ class Analytics_PageTool extends PageTool
 
         $customDimensions = Session::get(self::$CUSTOM_DIMENSION_KEY);
         foreach ($customDimensions as $key => $value) {
-            $js .= "
-				ga('set', '{$key}', '{$value}');";
+            $js .= "\nga('set', '{$key}', '{$value}');";
 
             $logger->debug(
                 sprintf("Sending GA custom dimension: %s => %s",
@@ -92,12 +93,10 @@ class Analytics_PageTool extends PageTool
         }
 
         if (Session::exists(self::$END_SESSION_KEY)) {
-            $js .= "
-			ga('send', 'pageview', {'sessionControl': 'start'}); ";
+            $js .= "\nga('send', 'pageview', {'sessionControl': 'start'});\n";
             Session::delete(self::$END_SESSION_KEY);
         } else {
-            $js .= "
-			ga('send', 'pageview');";
+            $js .= "\nga('send', 'pageview');\n";
         }
 
         $scriptToInsertBefore = null;
