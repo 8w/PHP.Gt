@@ -1,11 +1,11 @@
 <?php class User_PageTool extends PageTool {
 /**
- * User PageTool is used to provide authorisation within your application, 
+ * User PageTool is used to provide authorisation within your application,
  * along with anonymous users for applications that don't require signing up but
  * do require persistent storage. Anonymous users can then be converted into
  * full users by regular authorisation.
  *
- * If authorisation is not required in your application, 
+ * If authorisation is not required in your application,
  * getUser() is called to get reference to a database user, authorised or
  * simply anonymous. This is a less-strict version of checkAuth().
  */
@@ -51,7 +51,7 @@ public function get() {
 }
 
 /**
- * Used like checkAuth(), but doesn't require authorisation. GetUser can be 
+ * Used like checkAuth(), but doesn't require authorisation. GetUser can be
  * used to allow anonymous users to use the application, and be treated as
  * usual users in terms of database storage and returned values.
  * If the UUID doesn't exist in the database, a new anonymous user will be
@@ -69,7 +69,7 @@ public function getUser($auth = null) {
 		$this->setActive();
 		return Session::get("PhpGt.User");
 	}
-	
+
 	// Ensure there is a related user in the database.
 	// If a user doesn't exist, create one.
 	$db = $this->_api[$this];
@@ -102,8 +102,8 @@ public function getUser($auth = null) {
 }
 
 /**
- * Checks the given Auth object for authentication. If there is no 
- * authentication, the method will simply return false. If there is 
+ * Checks the given Auth object for authentication. If there is no
+ * authentication, the method will simply return false. If there is
  * authentication, the authenticated details will be mapped to the user's
  * database record which in turn will be stored in the PhpGt.User
  * session variable, before returning true.
@@ -244,7 +244,7 @@ public function track($forceUuid = null) {
  * as a string, an ID as an integer, or a DbResult object to extract values
  * from.
  * @param  int|string|DbResult $input The user data to store in the session.
- * @param  string              $anonUuid If a user has identified, the UUID of 
+ * @param  string              $anonUuid If a user has identified, the UUID of
  * the anonymous user can be passed here, which will be set on the user session
  * object, allowing app developers to merge user accounts if required.
  * @return array        The user details.
@@ -308,7 +308,7 @@ public function logout($auth = null) {
 		$auth->logout();
 	}
 
-	
+    Session::delete("PhpGt.User");
 }
 
 /**
@@ -335,7 +335,7 @@ private function generateSalt() {
 }
 
 /**
- * Merges two records in the User table. The record for the current user in 
+ * Merges two records in the User table. The record for the current user in
  * session is kept, and the orphaned user record is dropped.
  * @return  bool True on successful merge, false if there is no orphan record.
  */
