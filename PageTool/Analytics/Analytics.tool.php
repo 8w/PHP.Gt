@@ -77,8 +77,8 @@ class Analytics_PageTool extends PageTool
             Session::delete(self::$EVENT_KEY);
         }
 
-        if (!Session::exists(self::$CUSTOM_DIMENSION_KEY)) {
-            // this is a new session so add the custom dimension to filter-out spam entries
+        // make sure the non-spam flag is always set so we can filter out google analytics spam entries
+        if(! Session::exists(self::$CUSTOM_DIMENSION_KEY . ".{$name}")) {
             $this->customDimension(self::ANTI_SPAM, "true");
         }
 
