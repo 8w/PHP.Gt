@@ -78,7 +78,7 @@ class Analytics_PageTool extends PageTool
         }
 
         // make sure the non-spam flag is always set so we can filter out google analytics spam entries
-        if(! Session::exists(self::$CUSTOM_DIMENSION_KEY . ".{$name}")) {
+        if (!Session::exists(self::$CUSTOM_DIMENSION_KEY . "." . self::ANTI_SPAM)) {
             $this->customDimension(self::ANTI_SPAM, "true");
         }
 
