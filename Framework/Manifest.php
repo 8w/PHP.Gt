@@ -104,11 +104,12 @@ public function getFingerprint() {
 			// md5 the path to make sure we don't have
 			// any accidental clashes (remember it's only the file listed in the
 			// head that's fingerprinted, not any @includes etc)
-			$fingerprint .= md5(APPROOT . $source);
+			$fingerprint .= ',' . md5($source);
 			$this->_pathArray[] = $source;
 		}
 	}
-
+    $logger->debug("Fingerprinted the following <head> entries: " . print_r($this->_pathArray, true));
+    $logger->debug("Fingerprints were " . $fingerprint);
 	$this->_fingerprint = md5($fingerprint);
 	return $this->_fingerprint;
 }

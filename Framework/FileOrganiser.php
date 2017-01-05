@@ -186,6 +186,10 @@ public static function organiseStyleScriptFiles($dryRun = false) {
 		$md5Array = array_merge($md5Array, $outputArray);
 	}
 
+	// sort the arrays so they match across servers (which may have different file order
+    // due to install timestamps etc)
+    sort($md5Array);
+
 	foreach ($md5Array as $m) {
 		$md5 .= $m;
 	}
