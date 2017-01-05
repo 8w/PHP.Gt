@@ -75,8 +75,8 @@ public function getUser($auth = null) {
 	$db = $this->_api[$this];
 	$dbUser = $db->getByUuid(["uuid" => $uuid]);
 
-	if($dbUser->hasResult) {
-		$isIdentified = $dbUser["User_Type__name"] !== "Anon";
+    if($dbUser->hasResult) {
+        $isIdentified = $dbUser["User_Type__name"] !== "Anon";
 		$dbUser->setData("isIdentified", $isIdentified);
 		$dbUser = $dbUser->result[0];
 		$dbUser["isIdentified"] = false;
@@ -94,6 +94,9 @@ public function getUser($auth = null) {
 			"isIdentified" => false,
 		);
 	}
+
+	// add the user object to the session
+	Session::set("PhpGt.User", $dbUser);
 
 	$this->setActive($dbUser["ID"]);
 
@@ -205,13 +208,13 @@ public function checkAuth($auth) {
 
 	// Assign the user details to the session object, taking all dbUser fields
 	// and adding extras.
-	Session::set("PhpGt.User", array_merge($dbUser, [
+    Session::set("PhpGt.User", array_merge($dbUser, [
 		"dateTimeLastActive" => date("Y-m-d H:i:s"),
 		"isIdentified" => !empty($providerList),
 		"providerList" => $providerList,
 	]));
 
-	return true;
+    return true;
 }
 
 /**
