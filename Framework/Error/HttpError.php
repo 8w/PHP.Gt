@@ -182,6 +182,13 @@ private function displayError($code, $data = array("")) {
 				}
 
 				ob_clean();
+
+				if(AppAuth::getAuth()->isAuthenticated) {
+				    $node = $dom->getElementById("ifLoggedOut");
+				    if($node !== null) {
+				        $node->parentNode->removeChild($node);
+                    }
+                }
 				$dom->formatOutput = true;
 				echo $dom->saveHTML();
 				ob_flush();
