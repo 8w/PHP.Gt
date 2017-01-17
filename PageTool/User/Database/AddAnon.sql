@@ -1,11 +1,9 @@
-# Creates a new user without a unsername, identified by the Uuid.
-insert into User (
-	uuid,
-	username,
-	dateTimeCreated
+# Creates a new user identified by the Uuid.
+INSERT INTO User (
+  uuid,
+  dateTimeCreated
 )
-values (
-	:uuid,
-	null,
-	now()
+VALUES (
+  :uuid,
+  NOW()
 );

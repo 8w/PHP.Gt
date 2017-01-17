@@ -1,5 +1,11 @@
-<?php /**
+<?php
+use Stubs\PDOStatementStub;
+
+/**
  * @property bool|int hasResult
+ * @property bool|int affectedRows
+ * @property bool|int rowCount
+ * @property bool|int lastInsertID
  */
 class DalResult implements Iterator, ArrayAccess, Serializable {
 /**
@@ -16,7 +22,7 @@ public $result;
 /**
  * TODO: Docs.
  */
-public function __construct($stmt, $insertId, $originalSql, $tableName) {
+public function __construct(PDOStatement $stmt, $insertId, $originalSql, $tableName) {
 	$this->_stmt = $stmt;
 	$this->_insertId = $insertId;
 	$this->_originalSql = $originalSql;

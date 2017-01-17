@@ -8,11 +8,12 @@
  * to, and we can safely assume that there should be an SQL file representing
  * the called methods.
  */
+/** @var Dal|null  */
 private $_dal		= null;
 private $_tableName	= null;
 private $_isTool	= false;
 
-public function __construct($dal, $tableName, $isTool = false) {
+public function __construct(Dal $dal, $tableName, $isTool = false) {
 	$this->_dal = $dal;
 	$this->_tableName = $tableName;
 	$this->_isTool = $isTool;
@@ -51,7 +52,7 @@ public function __call($name, $args) {
 		}
 	}
 
-	throw new HttpError(500, 
+	throw new HttpError(500,
 		"No SQL found for $this->_tableName called $name.");
 	return false;
 }
@@ -62,7 +63,7 @@ public function setTool() {
 
 private function query($sqlFile, $paramArray = array()) {
 	if(!is_array($paramArray)) {
-		throw new HttpError(500, 
+		throw new HttpError(500,
 			"Trying to query $this->_tableName with incorrect parameters.");
 	}
 	$sql = file_get_contents($sqlFile);
@@ -125,8 +126,8 @@ private function query($sqlFile, $paramArray = array()) {
 			$result = $stmt->execute();
 			return new DalResult(
 				$stmt,
-				$this->_dal->lastInsertID(), 
-				$sql, 
+				$this->_dal->lastInsertID(),
+				$sql,
 				$this->_tableName);
 		}
 		catch(PDOException $e) {

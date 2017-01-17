@@ -1,6 +1,7 @@
-update User
-set
-	FK_User__orphanedBy = :ID
-where
-	ID = :orphanedID
-limit 1;
+UPDATE User
+SET
+  dateTimeDeleted     = NOW(),
+  FK_User__orphanedBy = :ID
+WHERE
+  ID = :orphanedID
+LIMIT 1;

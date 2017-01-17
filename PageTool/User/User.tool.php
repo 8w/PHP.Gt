@@ -1,356 +1,275 @@
-<?php class User_PageTool extends PageTool {
-/**
- * User PageTool is used to provide authorisation within your application,
- * along with anonymous users for applications that don't require signing up but
- * do require persistent storage. Anonymous users can then be converted into
- * full users by regular authorisation.
- *
- * If authorisation is not required in your application,
- * getUser() is called to get reference to a database user, authorised or
- * simply anonymous. This is a less-strict version of checkAuth().
- */
+<?php use RoadTest\Security\OAuth\Authenticator;
+use RoadTest\Utility\Logger\LoggerFactory;
 
-private $_whiteList = array();
+class User_PageTool extends PageTool
+{
+    /**
+     * User PageTool is used to provide authorisation within your application,
+     * along with anonymous users for applications that don't require signing up but
+     * do require persistent storage. Anonymous users can then be converted into
+     * full users by regular authorisation.
+     *
+     * If authorisation is not required in your application,
+     * getUser() is called to get reference to a database user, authorised or
+     * simply anonymous. This is a less-strict version of checkAuth().
+     */
 
-public function go($api, $dom, $template, $tool) {}
+    public function go($api, $dom, $template, $tool)
+    {
+    }
 
-public function __get($name) {
-	if(Session::exists("PhpGt.User")) {
-		$user = Session::get("PhpGt.User");
-	}
-	else {
-		$user = $this->getUser();
-	}
+    /**
+     * Loads the user according to the contents of the User cookie, or creates a
+     * new user if one doesn't exist.
+     *
+     * @param Authenticator $auth
+     *
+     * @return array        The user details, identified or anonymous.
+     */
+    public function getUser(Authenticator $auth): array
+    {
+        // Ensure there is a UUID tracking cookie set.
+        $uuid = $this->track();
 
-	switch($name) {
-	case "authenticated":
-	case "isAuthenticated":
-	case "username":
-	case "userName":
-		die("User PageTool does not 'authenticate', "
-			. "it only provides authorisation.");
-		break;
-	case "id":
-		return $user["ID"];
-		break;
-	case "uuid":
-		return $_COOKIE["PhpGt_User_PageTool"];
-		break;
-	case "orphanedID":
-		return empty($user["orphanedID"])
-			? null
-			: $user["orphanedID"];
-	default:
-		return null;
-		break;
-	}
-}
+        $user = $this->loadAuthenticatedUser($auth);
+        if ($user == null) {
+            $user = $this->loadAnonymousUser($uuid);
+        }
+        if ($user == null) {
+            $user = $this->createNewAnonymousUser($uuid);
+        }
 
-public function get() {
-	return call_user_func_array([$this, "getUser"], func_get_args());
-}
+        // Return the array-like-object representing the user.
+        return $this->markUserActive($user);
+    }
 
-/**
- * Used like checkAuth(), but doesn't require authorisation. GetUser can be
- * used to allow anonymous users to use the application, and be treated as
- * usual users in terms of database storage and returned values.
- * If the UUID doesn't exist in the database, a new anonymous user will be
- * created.
- * @param Auth $auth    An instance of Auth object, representing an OAuth user.
- * @return array        The user details, identified or anonymous.
- */
-public function getUser($auth = null) {
-	// Ensure there is a UUID tracking cookie set.
-	$uuid = $this->track();
+    /**
+     * Checks for a tracking cookie, and if it doesn't exist, creates one.
+     *
+     * @return string The tracking UUID.
+     * @throws HttpError
+     */
+    public function track()
+    {
+        if (empty($_COOKIE["PhpGt_User_PageTool"])) {
+            $uuid = $this->generateSalt();
+            $this->setTrackingCookie($uuid);
+        }
 
-	// If user is authorised already, return early with the authorised
-	// user detains in an array.
-	if($this->checkAuth($auth)) {
-		$this->setActive();
-		return Session::get("PhpGt.User");
-	}
+        return $_COOKIE["PhpGt_User_PageTool"];
+    }
 
-	// Ensure there is a related user in the database.
-	// If a user doesn't exist, create one.
-	$db = $this->_api[$this];
-	$dbUser = $db->getByUuid(["uuid" => $uuid]);
+    /**
+     * Removes the current authorisation cookie and also optionally deauthenticates
+     * the Auth object.
+     *
+     * @param  Authenticator $auth Authentication object to disconnect all providers.
+     */
+    public function unAuth(Authenticator $auth = null)
+    {
+        LoggerFactory::get($this)
+            ->debug("unAuthing user - removing cookie and PhpGt.User session object");
+        $_COOKIE["PhpGt_User_PageTool"] = null;
+        setcookie("PhpGt_User_PageTool", 0, 1, "/");
+        if (!is_null($auth)) {
+            $auth->logout();
+        }
 
-    if($dbUser->hasResult) {
-        $isIdentified = $dbUser["User_Type__name"] !== "Anon";
-		$dbUser->setData("isIdentified", $isIdentified);
-		$dbUser = $dbUser->result[0];
-		$dbUser["isIdentified"] = false;
-	}
-	else {
-		$result = $db->addAnon(["uuid" => $uuid]);
-		// Build an array that matches what is stored in the database.
-		$dbUser = array(
-			"ID" => $result->lastInsertID,
-			"uuid" => $uuid,
-			"username" => null,
-			"dateTimeIdentified" => null,
-			"dateTimeLastActive" => date("Y-m-d H:i:s"),
-			"User_Type__name" => "Anon",
-			"isIdentified" => false,
-		);
-	}
+        Session::delete("PhpGt.User");
+    }
 
-	// add the user object to the session
-	Session::set("PhpGt.User", $dbUser);
+    /**
+     * Merges two records in the User table. The record for the current user in
+     * session is kept, and the orphaned user record is marked deleted.
+     * @return  bool True on successful merge, false if there is no orphan record.
+     */
+    public function mergeOrphan()
+    {
+        $user = Session::get("PhpGt.User");
+        if (empty($user["orphanedID"])) {
+            return false;
+        }
 
-	$this->setActive($dbUser["ID"]);
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
+        /** @var User_Api $userDB */
+        $userDB = $this->_api[$this];
+        $dbResult = $userDB->mergeOrphan($user);
 
-	// Return the array, or array-like-object representing the user.
-	return $dbUser;
-}
+        return $dbResult->affectedRows > 0;
+    }
 
-/**
- * Checks the given Auth object for authentication. If there is no
- * authentication, the method will simply return false. If there is
- * authentication, the authenticated details will be mapped to the user's
- * database record which in turn will be stored in the PhpGt.User
- * session variable, before returning true.
- *
- * @param Auth $auth 	An instance of Auth object, representing an OAuth user.
- * @return bool			True if $auth is authenticated, false if not.
- */
-public function checkAuth($auth) {
-	// The user is authenticated to at least one OAuth provider.
-	// The database will be checked for existing user matching OAuth data...
-	// ... if there is no match, one will be stored.
-	$dbUser = null;
-	$providerList = $auth->providerList;
-	$oAuthMissing = array();
-	foreach ($providerList as $provider) {
-		$profile = $auth->getProfile($provider);
-		$uid = $profile->identifier;
-		if(empty($uid)) {
-			if(Session::exists("PhpGt.Auth.ID_User")) {
-				$uid = Session::get("PhpGt.Auth.ID_User");
-			}
-		}
-		$oauth_uuid = $provider . $uid;
+    /**
+     * @param string $uuid The user's UUID
+     *
+     * @return array|null The user or null if there is no user with that UUID
+     */
+    private function loadAnonymousUser(string $uuid)
+    {
+        $logger = LoggerFactory::get($this);
+        $logger->debug("Attempting to load anonymous user with UUID $uuid");
+        // Ensure there is a related user in the database.
+        // If a user doesn't exist, create one.
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
+        /** @var User_Api $db */
+        $db = $this->_api[$this];
+        $dbUser = $db->getByUuid(["uuid" => $uuid]);
 
-		$existingOAuthUser = $this->_api[$this]->getByOAuthUuid([
-			"oauth_uuid" => $oauth_uuid,
-		]);
-		if(is_null($existingOAuthUser)) {
-			throw new HttpError(500, "User table collection not deployed");
-		}
-		if($existingOAuthUser->hasResult) {
-			$dbUser = $existingOAuthUser->result[0];
-			// update the cookie to match the logged-in user
-			$this->track($dbUser["uuid"]);
-		}
-		else {
-			// Store the missing OAuth records once the user ID is found.
-			$oAuthMissing[$provider] = $oauth_uuid;
-		}
-	}
+        if ($dbUser->hasResult) {
+            $dbUser = $dbUser->result[0];
+            $logger->debug("Anonymous user {$dbUser['ID']} loaded from database");
 
-	if(is_null($dbUser)) {
-		// The user doesn't have any OAuth records yet, so we don't have a
-		// reference to the user - get it from the tracking ID, or if supplied,
-		// the overridden user ID (used by Dummy Auth tests).
-		if(Session::exists("PhpGt.Auth.ID_User")) {
-			$dbUser = $this->_api[$this]->getByID([
-				"ID" => Session::get("PhpGt.Auth.ID_User"),
-			]);
-			if(!$dbUser->hasResult) {
-				// Impossible situation - there's no user found from UUID.
-				throw new HttpError(500, "User tracking code mismatch!");
-			}
+            if ($dbUser["isIdentified"] != false) {
+                $logger->warning("User " .
+                    $dbUser['ID']
+                    . " is not authenticated but has isIdentified == true");
+            }
+        } else {
+            $logger->debug("No anonymous user found with UUID $uuid");
+            $dbUser = null;
+        }
 
-			// Mark the user as identified.
-			// This is overridden behaviour for Dummy OAuth login.
-			// TODO: Needs a refactor to be a lot tidier!
-			$dbUser = array_merge($dbUser->result[0], [
-				"dateTimeIdentified" => date("Y-m-d H:i:s"),
-			]);
-			$this->_api[$this]->anonIdentify([
-				"username" => null,
-				"uuid" => $dbUser["uuid"],
-			]);
-		}
-		else {
-			$dbUser = $this->_api[$this]->getByUuid([
-				"uuid" => $this->track(),
-			]);
-			if(!$dbUser->hasResult) {
-				return false;
-				// Impossible situation - there's no user found from UUID.
-				throw new HttpError(500, "No user found!");
-			}
+        return $dbUser;
+    }
 
-			// Mark the user as identified.
-			$dbUser = array_merge($dbUser->result[0], [
-				"dateTimeIdentified" => date("Y-m-d H:i:s"),
-			]);
+    /**
+     * Checks the given Auth object for authentication. If there is no
+     * authentication, the method will return null. If there is
+     * authentication, the authenticated details will be mapped to the user's
+     * database record which in turn will be loaded and returned.
+     *
+     * @param Authenticator $auth The authentication interface
+     *
+     * @return array|null A user array - or null if there is no authenticated user
+     * @throws HttpError
+     */
+    private function loadAuthenticatedUser(Authenticator $auth)
+    {
+        $logger = LoggerFactory::get($this);
+        if ($auth->isAuthenticated() === false) {
+            return null;
+        }
 
-			// Pull the user out of the database again now it has been updated.
-			$dbUser = $this->_api[$this]->getByUuid([
-				"uuid" => $this->track(),
-			]);
-			$dbUser = $dbUser->result[0];
-		}
-	}
+        // The user is authenticated to an OAuth provider.
+        // The database will be checked for existing user matching OAuth data...
+        // ... if there is no match, one will be stored.
+        $resourceOwnerId = $auth->getResourceOwnerId();
+        $oauth_uuid = $auth->getAuthenticatedProvider() . $resourceOwnerId;
 
-	// At this point $dbUser definitely refers to an existing user, but OAuth
-	// records may still be missing... create them!
-	foreach ($oAuthMissing as $provider => $oauth_uuid) {
-		$this->_api[$this]->linkOAuth([
-			"FK_User" => $dbUser["ID"],
-			"oauth_uuid" => $oauth_uuid,
-			"oauth_name" => $provider,
-		]);
-	}
+        $logger->debug("Attempting to load authenticated user with OAuthUID $oauth_uuid");
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
+        /** @var User_Api $userDB */
+        $userDB = $this->_api[$this];
+        $existingOAuthUser = $userDB->getByOAuthUuid([
+            "oauth_uuid" => $oauth_uuid,
+        ]);
 
+        $dbUser = null;
+        if ($existingOAuthUser->hasResult) {
+            $dbUser = $existingOAuthUser->result[0];
+            $logger->debug("Existing OAuth user ({$dbUser["ID"]}) loaded from db");
+            if ($dbUser["uuid"] !== $this->track()) {
+                // update the cookie to match the logged-in user
+                $this->setTrackingCookie($dbUser["uuid"]);
+            }
+        } else {
+            // Store the missing OAuth records once the user ID is found.
+            $dbUser = $userDB->getByUuid([
+                "uuid" => $this->track(),
+            ]);
 
-	// Assign the user details to the session object, taking all dbUser fields
-	// and adding extras.
-    Session::set("PhpGt.User", array_merge($dbUser, [
-		"dateTimeLastActive" => date("Y-m-d H:i:s"),
-		"isIdentified" => !empty($providerList),
-		"providerList" => $providerList,
-	]));
+            if ($dbUser->hasResult) {
+                $dbUser = $dbUser->result[0];
+            } else {
+                throw new HttpError(
+                    500,
+                    ["Message" => "User could not be retrieved by UUID"]);
+            }
 
-    return true;
-}
+            $logger->debug("No existing OAuth records found for user "
+                . $dbUser["ID"]
+                . " - creating new");
 
-/**
- * Checks for a tracking cookie, and if it doesn't exist, creates one.
- * @param  $force Optional. Pass in a new uuid to track with.
- * @return string The tracking UUID.
- */
-public function track($forceUuid = null) {
-	if(empty($_COOKIE["PhpGt_User_PageTool"]) || !is_null($forceUuid)) {
-		$uuid = is_null($forceUuid)
-			? $this->generateSalt()
-			: $forceUuid;
-		$expires = strtotime("+105 weeks");
-		// if we're in production, only allow the cookie over https.  (Can't always
-		// do it otherwise the built-in server won't work, and we do want it to)
-		$secureOnly = (\App_Config::isProduction() === true);
-		if(!setcookie("PhpGt_User_PageTool", $uuid, $expires, "/", "", $secureOnly, true)) {
-			throw new HttpError(500,
-				"Error generating tracking cookie in User PageTool.");
-		}
-		$_COOKIE["PhpGt_User_PageTool"] = $uuid;
-		return $uuid;
-	}
+            $userDB->linkOAuth([
+                "FK_User" => $dbUser["ID"],
+                "oauth_uuid" => $oauth_uuid,
+                "oauth_name" => $auth->getAuthenticatedProvider(),
+            ]);
 
-	return $_COOKIE["PhpGt_User_PageTool"];
-}
+            $dbUser = array_merge($dbUser, [
+                "isIdentified" => true,
+            ]);
+        }
 
-/**
- * Creates the User session for internal use by this tool. Can accept a UUID
- * as a string, an ID as an integer, or a DbResult object to extract values
- * from.
- * @param  int|string|DbResult $input The user data to store in the session.
- * @param  string              $anonUuid If a user has identified, the UUID of
- * the anonymous user can be passed here, which will be set on the user session
- * object, allowing app developers to merge user accounts if required.
- * @return array        The user details.
- */
-private function userSession($input, $anonUuid = null) {
-	die("Use of dead function: userSession");
-	if(is_int($input)) {
-		$dbUser = $this->_api[$this]->getByID(["ID" => $input]);
-	}
-	else if(is_string($input)) {
-		$dbUser = $this->_api[$this]->getByUuid(["uuid" => $input]);
-	}
-	else {
-		$dbUser = $input;
-	}
+        return $dbUser;
+    }
 
-	if($dbUser->hasResult) {
-		Session::set("PhpGt.User.ID", $dbUser["ID"]);
-		Session::set("PhpGt.User.uuid", $dbUser["uuid"]);
-		Session::set("PhpGt.User.username", $dbUser["username"]);
+    /**
+     * Create a new (anonymous) user.
+     *
+     * @param string $uuid The UUID to associate with the user
+     *
+     * @return array The newly created user
+     */
+    private function createNewAnonymousUser(string $uuid): array
+    {
+        $logger = LoggerFactory::get($this);
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
+        /** @var User_Api $db */
+        $db = $this->_api[$this];
+        $db->addAnon(["uuid" => $uuid]);
+        $dbUser = $db->getByUuid(["uuid" => $uuid]);
+        $dbUser = $dbUser->result[0];
+        $logger->debug("New user created in db: {$dbUser['ID']}");
+        return $dbUser;
+    }
 
-		if (!is_null($anonUuid)) {
-			$anonDb = $this->_api[$this]->getByUuid(["uuid" => $anonUuid]);
-			if($anonDb->hasResult) {
-				Session::set("PhpGt.User.orphanedID", $anonDb["ID"]);
-				$this->mergeOrphan();
-			}
-		}
+    /**
+     * Increments the activity indicator in the user table, and sets the last
+     * active dateTime to now().
+     *
+     * @param array $user The user to mark
+     *
+     * @return array The user, updated with its dateTimeLastActive
+     */
+    private function markUserActive(array $user): array
+    {
+        /** @noinspection PhpIllegalArrayKeyTypeInspection */
+        /** @var User_Api $userDB */
+        $userDB = $this->_api[$this];
+        $userDB->setActive(["ID" => $user["ID"]]);
 
-		return Session::get("PhpGt.User");
-	}
+        return array_merge($user, [
+            "dateTimeLastActive" => date("Y-m-d H:i:s"),
+        ]);
+    }
 
-	return null;
-}
+    /**
+     * Creates a UUID for tracking anonymous users.
+     * @return string The UUID.
+     */
+    private function generateSalt()
+    {
+        return hash("sha512", uniqid(APPSALT, true));
+    }
 
+    /**
+     * @param $uuid
+     *
+     * @throws HttpError
+     */
+    private function setTrackingCookie(string $uuid)
+    {
+        $logger = LoggerFactory::get($this);
 
-public function auth() {
-	return call_user_func_array([$this, "login"], func_get_args());
-}
-public function login($auth) {
-	$params = func_get_args();
-	array_shift($params);
-	return call_user_func_array([$auth, "login"], $params);
-}
-
-/**
- * Synonym for logout.
- */
-public function unAuth($auth = null) {
-	return $this->logout($auth);
-}
-/**
- * Removes the current authorisation cookie and also optionally deauthenticates
- * the Auth object.
- * @param  Auth $auth   Authentication object to disconnect all providers.
- */
-public function logout($auth = null) {
-	$_COOKIE["PhpGt_User_PageTool"] = null;
-	setcookie("PhpGt_User_PageTool", 0, 1, "/");
-	if(!is_null($auth)) {
-		$auth->logout();
-	}
-
-    Session::delete("PhpGt.User");
-}
-
-/**
- * Increments the activity indicator in the user table, and sets the last
- * active dateTime to now().
- * @param int $id The ID of the user, or leave blank for the current user.
- */
-private function setActive($id = null) {
-	if(is_null($id)) {
-		$id = Session::get("PhpGt.User.ID");
-	}
-	if(is_null($id)) {
-		return false;
-	}
-	$this->_api[$this]->setActive(["ID" => $id]);
-}
-
-/**
- * Creates a UUID for tracking anonymous users.
- * @return string The UUID.
- */
-private function generateSalt() {
-	return hash("sha512", uniqid(APPSALT, true));
-}
-
-/**
- * Merges two records in the User table. The record for the current user in
- * session is kept, and the orphaned user record is dropped.
- * @return  bool True on successful merge, false if there is no orphan record.
- */
-public function mergeOrphan() {
-	$user = Session::get("PhpGt.User");
-	if(empty($user["orphanedID"])) {
-		return false;
-	}
-
-	$dbResult = $this->_api[$this]->mergeOrphan($user);
-
-	return $dbResult->affectedRows > 0;
-}
-
+        $expires = strtotime("+105 weeks");
+        // if we're in production, only allow the cookie over https.  (Can't always
+        // do it otherwise the built-in server won't work, and we do want it to)
+        $secureOnly = (\App_Config::isProduction() === true);
+        if (!setcookie("PhpGt_User_PageTool", $uuid, $expires, "/", "", $secureOnly, true)) {
+            throw new HttpError(500,
+                "Error generating tracking cookie in User PageTool.");
+        }
+        $_COOKIE["PhpGt_User_PageTool"] = $uuid;
+        $logger->debug("Tracking cookie set/updated for UUID {$uuid}");
+    }
 }#
