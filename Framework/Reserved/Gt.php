@@ -68,7 +68,8 @@ public function __destruct() {
 		$forward = $_SESSION["DbDeploy"]["Forward"];
 		unset($_SESSION["DbDeploy"]);
 		header("Location: {$forward}");
-	}	
+		exit;
+	}
 }
 
 /**
@@ -80,8 +81,8 @@ private function getSqlArray($dbConfig) {
 	// Replace any placeholders in each SQL with config data.
 	$replacements = array(
 		":DbName" 			=> "`" . $dbConfig["DbName"] . "`",
-		":UserServer" 		=> 
-			"'" . $dbConfig["Username"] 
+		":UserServer" 		=>
+			"'" . $dbConfig["Username"]
 				. "'@'" . $dbConfig["Host"] . "'",
 		":Password" 		=> "'" . $dbConfig["Password"] . "'",
 		":DatabaseTable" 	=> "`" . $dbConfig["DbName"] . "`.*"
