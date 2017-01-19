@@ -1,4 +1,4 @@
-<?php use RoadTest\Security\OAuth\Authenticator;
+<?php use RoadTest\OAuth\Authenticator;
 use RoadTest\Utility\Logger\LoggerFactory;
 
 class User_PageTool extends PageTool
