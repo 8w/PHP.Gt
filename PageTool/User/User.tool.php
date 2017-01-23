@@ -29,7 +29,7 @@ class User_PageTool extends PageTool
     public function getUser(Authenticator $auth): array
     {
         // Ensure there is a UUID tracking cookie set.
-        $uuid = $this->track();
+        $uuid = self::track();
 
         $user = $this->loadAuthenticatedUser($auth, $uuid);
         if ($user == null) {
@@ -41,22 +41,6 @@ class User_PageTool extends PageTool
 
         // Return the array-like-object representing the user.
         return $this->markUserActive($user);
-    }
-
-    /**
-     * Checks for a tracking cookie, and if it doesn't exist, creates one.
-     *
-     * @return string The tracking UUID.
-     * @throws HttpError
-     */
-    public function track()
-    {
-        if (empty($_COOKIE["PhpGt_User_PageTool"])) {
-            $uuid = $this->generateSalt();
-            $this->setTrackingCookie($uuid);
-        }
-
-        return $_COOKIE["PhpGt_User_PageTool"];
     }
 
     /**
@@ -147,8 +131,8 @@ class User_PageTool extends PageTool
         // The user is authenticated to an OAuth provider.
         // The database will be checked for existing user matching OAuth data...
         // ... if there is no match, one will be stored.
-        $resourceOwnerId = $auth->getResourceOwnerId();
-        $oauth_uuid = $auth->getAuthenticatedProvider() . $resourceOwnerId;
+        $resourceOwnerId = $auth->getResourceOwnerId($uuid);
+        $oauth_uuid = $auth->getAuthenticatedProvider($uuid) . $resourceOwnerId;
 
         $logger->debug("Attempting to load authenticated user with OAuthUID $oauth_uuid");
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
@@ -162,14 +146,14 @@ class User_PageTool extends PageTool
         if ($existingOAuthUser->hasResult) {
             $dbUser = $existingOAuthUser->result[0];
             $logger->debug("Existing OAuth user ({$dbUser["ID"]}) loaded from db");
-            if ($dbUser["uuid"] !== $this->track()) {
+            if ($dbUser["uuid"] !== self::track()) {
                 // update the cookie to match the logged-in user
-                $this->setTrackingCookie($dbUser["uuid"]);
+                self::setTrackingCookie($dbUser["uuid"]);
             }
         } else {
             // Store the missing OAuth records once the user ID is found.
             $dbUser = $userDB->getByUuid([
-                "uuid" => $this->track(),
+                "uuid" => self::track(),
             ]);
 
             if ($dbUser->hasResult) {
@@ -187,7 +171,7 @@ class User_PageTool extends PageTool
             $userDB->linkOAuth([
                 "FK_User" => $dbUser["ID"],
                 "oauth_uuid" => $oauth_uuid,
-                "oauth_name" => $auth->getAuthenticatedProvider(),
+                "oauth_name" => $auth->getAuthenticatedProvider($uuid),
             ]);
 
             $dbUser = array_merge($dbUser, [
@@ -239,22 +223,41 @@ class User_PageTool extends PageTool
     }
 
     /**
-     * Creates a UUID for tracking anonymous users.
+     * Get the user's UUID (creating a new one if there isn't one associated with this user
+     * already)
+     *
+     * @return string The tracking UUID.
+     */
+    public static function track()
+    {
+        if (empty($_COOKIE["PhpGt_User_PageTool"])) {
+            $uuid = self::generateSalt();
+            self::setTrackingCookie($uuid);
+        }
+
+        return $_COOKIE["PhpGt_User_PageTool"];
+    }
+
+    /**
+     * Creates a new UUID for tracking a (new) user.
+     *
      * @return string The UUID.
      */
-    private function generateSalt()
+    private static function generateSalt()
     {
         return hash("sha512", uniqid(APPSALT, true));
     }
 
     /**
-     * @param $uuid
+     * Set (or overwrite) the user tracking cookie
      *
-     * @throws HttpError
+     * @param string $uuid The user's UUID
+     *
+     * @throws HttpError If setcookie fails
      */
-    private function setTrackingCookie(string $uuid)
+    private static function setTrackingCookie(string $uuid)
     {
-        $logger = LoggerFactory::get($this);
+        $logger = LoggerFactory::get(self::class);
 
         $expires = strtotime("+105 weeks");
         // if we're in production, only allow the cookie over https.  (Can't always

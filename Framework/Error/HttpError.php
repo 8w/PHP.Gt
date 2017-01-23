@@ -183,7 +183,7 @@ private function displayError($code, $data = array("")) {
 
 				ob_clean();
 
-				if(AppAuth::getAuth()->isAuthenticated()) {
+				if(AppAuth::isAuthenticated()) {
 				    $node = $dom->getElementById("ifLoggedOut");
 				    if($node !== null) {
 				        $node->parentNode->removeChild($node);
