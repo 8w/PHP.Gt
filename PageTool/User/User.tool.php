@@ -31,7 +31,7 @@ class User_PageTool extends PageTool
         // Ensure there is a UUID tracking cookie set.
         $uuid = $this->track();
 
-        $user = $this->loadAuthenticatedUser($auth);
+        $user = $this->loadAuthenticatedUser($auth, $uuid);
         if ($user == null) {
             $user = $this->loadAnonymousUser($uuid);
         }
@@ -60,21 +60,16 @@ class User_PageTool extends PageTool
     }
 
     /**
-     * Removes the current authorisation cookie and also optionally deauthenticates
-     * the Auth object.
-     *
-     * @param  Authenticator $auth Authentication object to disconnect all providers.
+     * Removes tracking of the current user so they're "forgotten" in this session and a new
+     * user is created on the next page call.
      */
-    public function unAuth(Authenticator $auth = null)
+    public function unAuth()
     {
         LoggerFactory::get($this)
-            ->debug("unAuthing user - removing cookie and PhpGt.User session object");
+            ->debug("unAuthing user - removing PhpGt_User_PageTool cookie " .
+                "and PhpGt.User session object");
         $_COOKIE["PhpGt_User_PageTool"] = null;
         setcookie("PhpGt_User_PageTool", 0, 1, "/");
-        if (!is_null($auth)) {
-            $auth->logout();
-        }
-
         Session::delete("PhpGt.User");
     }
 
@@ -142,10 +137,10 @@ class User_PageTool extends PageTool
      * @return array|null A user array - or null if there is no authenticated user
      * @throws HttpError
      */
-    private function loadAuthenticatedUser(Authenticator $auth)
+    private function loadAuthenticatedUser(Authenticator $auth, string $uuid)
     {
         $logger = LoggerFactory::get($this);
-        if ($auth->isAuthenticated() === false) {
+        if ($auth->isAuthenticated($uuid) === false) {
             return null;
         }
 
