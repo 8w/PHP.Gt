@@ -47,9 +47,9 @@ class User_PageTool extends PageTool
      * Removes tracking of the current user so they're "forgotten" in this session and a new
      * user is created on the next page call.
      */
-    public function unAuth()
+    public static function unAuth()
     {
-        LoggerFactory::get($this)
+        LoggerFactory::get(self::class)
             ->debug("unAuthing user - removing PhpGt_User_PageTool cookie " .
                 "and PhpGt.User session object");
         $_COOKIE["PhpGt_User_PageTool"] = null;
@@ -159,9 +159,7 @@ class User_PageTool extends PageTool
             if ($dbUser->hasResult) {
                 $dbUser = $dbUser->result[0];
             } else {
-                throw new HttpError(
-                    500,
-                    ["Message" => "User could not be retrieved by UUID"]);
+                throw new InvalidUUIDException($uuid);
             }
 
             $logger->debug("No existing OAuth records found for user "
