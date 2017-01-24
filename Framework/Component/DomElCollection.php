@@ -3,6 +3,11 @@
 /**
  * @method void setAttribute(string $attributeName, string $attributeValue);
  * @method void replace(DomEl $replaceWith);
+ * @method DomEl remove();
+ * @method void removeAttribute(string $attribute);
+ * @method void removeClass(string $class);
+ * @method void addClass(string $class);
+ * @method DomElCollection xpath(string $selector);
  */
 class DomElCollection implements Iterator, ArrayAccess {
 /**

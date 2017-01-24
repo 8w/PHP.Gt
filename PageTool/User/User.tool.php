@@ -1,4 +1,7 @@
 <?php
+use Gt\User\AuthenticatedUser;
+use Gt\User\InvalidUUIDException;
+use Gt\User\User;
 use Psr\Log\LoggerInterface;
 use RoadTest\OAuth\Authenticator;
 use RoadTest\Utility\Logger\LoggerFactory;
@@ -29,12 +32,13 @@ class User_PageTool extends PageTool
      *
      * @param Authenticator $auth
      *
-     * @return array        The user details, identified or anonymous.
+     * @return User        The user details, identified or anonymous.
      */
-    public function getUser(Authenticator $auth): array
+    public function getUser(Authenticator $auth): User
     {
         $logger = self::getLogger();
-        $user = Session::get("PhpGt.User");
+        /** @var User $user */
+        $user = $this->getUserFromCache();
 
         if ($user === null) {
             // Ensure there is a UUID tracking cookie set.
@@ -47,47 +51,25 @@ class User_PageTool extends PageTool
             if ($user === null) {
                 $user = $this->createNewAnonymousUser($uuid);
             }
+            $this->cacheUser($user);
         } else {
-            $logger->debug("Loaded user " . $user["ID"] . " from session");
+            $logger->debug("Loaded user " . $user->getId() . " from session");
         }
 
         $this->markUserActive($user);
-        // have to save it back to the session as it's an array not an object
-        $user = Session::set("PhpGt.User", $user);
         return $user;
-    }
-
-    /**
-     * Merges two records in the User table. The record for the current user in
-     * session is kept, and the orphaned user record is marked deleted.
-     * @return  bool True on successful merge, false if there is no orphan record.
-     */
-    public function mergeOrphan()
-    {
-        $user = Session::get("PhpGt.User");
-        if (empty($user["orphanedID"])) {
-            return false;
-        }
-
-        /** @noinspection PhpIllegalArrayKeyTypeInspection */
-        /** @var User_Api $userDB */
-        $userDB = $this->_api[$this];
-        $dbResult = $userDB->mergeOrphan($user);
-
-        return $dbResult->affectedRows > 0;
     }
 
     /**
      * @param string $uuid The user's UUID
      *
-     * @return array|null The user or null if there is no user with that UUID
+     * @return User|null The user or null if there is no user with that UUID
      */
     private function loadAnonymousUser(string $uuid)
     {
         $logger = self::getLogger();
         $logger->debug("Attempting to load anonymous user with UUID $uuid");
-        // Ensure there is a related user in the database.
-        // If a user doesn't exist, create one.
+        // load the user from the DB, if they exist
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
         /** @var User_Api $db */
         $db = $this->_api[$this];
@@ -102,12 +84,12 @@ class User_PageTool extends PageTool
                     $dbUser['ID']
                     . " is not authenticated but has isIdentified == true");
             }
+            return new User($dbUser["ID"], $dbUser["uuid"], $dbUser["dateTimeLastActive"]);
+
         } else {
             $logger->debug("No anonymous user found with UUID $uuid");
-            $dbUser = null;
+            return null;
         }
-
-        return $dbUser;
     }
 
     /**
@@ -119,7 +101,7 @@ class User_PageTool extends PageTool
      * @param Authenticator $auth The authentication interface
      * @param string        $uuid The user's UUID
      *
-     * @return array|null A user array - or null if there is no authenticated user
+     * @return AuthenticatedUser|null A user array - or null if there is no authenticated user
      * @throws InvalidUUIDException
      */
     private function loadAuthenticatedUser(Authenticator $auth, string $uuid)
@@ -143,13 +125,21 @@ class User_PageTool extends PageTool
             "oauth_uuid" => $oauth_uuid,
         ]);
 
-        $dbUser = null;
+        $user = null;
         if ($existingOAuthUser->hasResult) {
             $dbUser = $existingOAuthUser->result[0];
-            $logger->debug("Existing OAuth user ({$dbUser["ID"]}) loaded from db");
-            if ($dbUser["uuid"] !== self::track()) {
+            $user = new AuthenticatedUser(
+                $dbUser["ID"],
+                $dbUser["uuid"],
+                $dbUser["dateTimeLastActive"],
+                $dbUser["oauthUuid"],
+                $dbUser["oauthProviderName"],
+                new DateTime($dbUser["dateTimeIdentified"]));
+
+            $logger->debug("Existing OAuth user ({$user->getId()}) loaded from db");
+            if ($user->getUuid() !== self::track()) {
                 // update the cookie to match the logged-in user
-                self::setTrackingCookie($dbUser["uuid"]);
+                self::setTrackingCookie($user->getUuid());
             }
         } else {
             // Store the missing OAuth records once the user ID is found.
@@ -173,12 +163,16 @@ class User_PageTool extends PageTool
                 "oauth_name" => $auth->getAuthenticatedProvider(),
             ]);
 
-            $dbUser = array_merge($dbUser, [
-                "isIdentified" => true,
-            ]);
+            $user = new AuthenticatedUser(
+                $dbUser["ID"],
+                $dbUser["uuid"],
+                $dbUser["dateTimeLastActive"],
+                $oauth_uuid,
+                $auth->getAuthenticatedProvider(),
+                new DateTime());
         }
 
-        return $dbUser;
+        return $user;
     }
 
     /**
@@ -186,37 +180,50 @@ class User_PageTool extends PageTool
      *
      * @param string $uuid The UUID to associate with the user
      *
-     * @return array The newly created user
+     * @return User The newly created user
      */
-    private function createNewAnonymousUser(string $uuid): array
+    private function createNewAnonymousUser(string $uuid): User
     {
         $logger = self::getLogger();
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
         /** @var User_Api $db */
         $db = $this->_api[$this];
-        $db->addAnon(["uuid" => $uuid]);
-        $dbUser = $db->getByUuid(["uuid" => $uuid]);
-        $dbUser = $dbUser->result[0];
-        $logger->debug("Created new user in db: {$dbUser['ID']}");
-        return $dbUser;
+        $result = $db->addAnon(["uuid" => $uuid]);
+
+        $user = new User($result->lastInsertID, $uuid, new DateTime());
+        $logger->debug("Created new user in db: {$user->getId()}");
+        return $user;
     }
 
     /**
      * Increments the activity indicator in the user table, and sets the last
      * active dateTime to now().
      *
-     * @param array $user The user to mark
+     * @param User $user The user to mark
      *
      * @return void nothing - user is passed by reference
      */
-    private function markUserActive(array &$user)
+    private function markUserActive(User $user)
     {
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
         /** @var User_Api $userDB */
         $userDB = $this->_api[$this];
-        $userDB->setActive(["ID" => $user["ID"]]);
+        $userDB->setActive(["ID" => $user->getId()]);
 
-        $user["dateTimeLastActive"] = date("Y-m-d H:i:s");
+        $user->setActive();
+    }
+
+    private function cacheUser(User $user)
+    {
+        Session::set("PhpGt.User", $user);
+    }
+
+    /**
+     * @return User|null
+     */
+    private function getUserFromCache()
+    {
+        return Session::get("PhpGt.User");
     }
 
     /**
@@ -225,11 +232,10 @@ class User_PageTool extends PageTool
      */
     public static function unAuth()
     {
-        self::getLogger()
-            ->debug("unAuthing user - removing PhpGt_User_PageTool cookie " .
-                "and PhpGt.User session object");
+        self::getLogger()->debug("unAuthing user - removing PhpGt_User_PageTool cookie " .
+            "and PhpGt.User session object");
         self::removeTrackingCookie();
-        Session::delete("PhpGt.User");
+        self::clearCache();
     }
 
     /**
@@ -301,5 +307,11 @@ class User_PageTool extends PageTool
         }
 
         return self::$logger;
+    }
+
+    /** @return void */
+    public static function clearCache()
+    {
+        Session::delete("PhpGt.User");
     }
 }#

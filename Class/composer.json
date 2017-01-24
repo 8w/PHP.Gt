@@ -1,5 +1,10 @@
 {
-	"require": {
-		"leafo/scssphp": "0.0.9"
-	}
+  "require": {
+    "leafo/scssphp": "0.0.9"
+  },
+  "autoload": {
+    "psr-4": {
+      "Gt\\": "./Autoloaded/Gt/"
+    }
+  }
 }

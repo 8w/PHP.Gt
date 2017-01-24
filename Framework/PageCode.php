@@ -12,6 +12,7 @@ protected $_api			= null;
 /** @var Dom  */
 protected $_dom			= null;
 protected $_template	= null;
+/** @var PageToolWrapper  */
 protected $_tool		= null;
 protected $_appConfig	= null;
 
@@ -39,7 +40,7 @@ public function setVars($api, $dom, $template, $tool) {
  * @param array $template An associative array containing all DOM elements
  * that have been scraped out of the DOM with data-template attributes.
  * Each element keeps its designed form from how it appears in the HMTL.
- * @param ToolWrapper $tool The object that acts as a single entry point
+ * @param PageToolWrapper $tool The object that acts as a single entry point
  * to all PageTools. Can activate a PageTool by calling it through this
  * Associative array.
  */

@@ -1,4 +1,7 @@
 <?php
+namespace Gt\User;
+
+use Exception;
 
 class InvalidUUIDException extends Exception
 {

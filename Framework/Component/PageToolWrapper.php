@@ -1,4 +1,7 @@
-<?php class PageToolWrapper implements ArrayAccess {
+<?php
+/** @method void go(string $string)
+ */
+class PageToolWrapper implements ArrayAccess {
 /**
  * Can access as an array - that gets to the raw object - but for simplicity,
  * you should call $tool->go("ToolName"); The function "go" can be anything that
@@ -28,7 +31,7 @@ public function offsetGet($offset) {
 	}
 	else {
 		// Attempt to find and load the required tool.
-		
+
 		$pathArray = array(
 			APPROOT . "/PageTool/$offset/",
 			GTROOT  . "/PageTool/$offset/",
@@ -74,11 +77,11 @@ public function offsetUnset($offset) {
 	die("What are you unsetting the PageTool for???");
 }
 
-/** 
+/**
  * Maps the PageToolWrapper's method to the PageTool object matching the
  * given name. For example, $tool->go("Foo") will call the "go" method
  * of the Foo PageTool, injecting the PHPGt arguments. More arguments can
- * be passed to the method by simply supplying them to the function 
+ * be passed to the method by simply supplying them to the function
  * e.g. $tool->go("Foo", $bar, $baz)
  */
 public function __call($name, $args) {

@@ -6,6 +6,9 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Gt\\User\\AuthenticatedUser' => $baseDir . '/Autoloaded/Gt/User/AuthenticatedUser.php',
+    'Gt\\User\\InvalidUUIDException' => $baseDir . '/Autoloaded/Gt/User/InvalidUUIDException.php',
+    'Gt\\User\\User' => $baseDir . '/Autoloaded/Gt/User/User.php',
     'scss_formatter' => $vendorDir . '/leafo/scssphp/scss.inc.php',
     'scss_formatter_compressed' => $vendorDir . '/leafo/scssphp/scss.inc.php',
     'scss_formatter_nested' => $vendorDir . '/leafo/scssphp/scss.inc.php',

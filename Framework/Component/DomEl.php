@@ -12,7 +12,7 @@ private $_tagName;
 private $_class;
 private $_id;
 private $_contents;
-
+/** @var DomElClassList  */
 public $classList;
 
 public function __construct(
@@ -57,7 +57,7 @@ $value      = null) {
 }
 
 public function offsetExists($selector) {
-	
+
 }
 
 public function offsetGet($selector) {
@@ -129,7 +129,7 @@ private function obtainElementArray($input) {
 */
 public function appendChild($child) {
 	$elementArray = call_user_func_array(
-		array($this, "obtainElementArray"), 
+		array($this, "obtainElementArray"),
 		func_get_args());
 
 	foreach($elementArray as $element) {
@@ -155,7 +155,7 @@ public function append() {
  */
 public function prependChild($child) {
 	$elementArray = call_user_func_array(
-		array($this, "obtainElementArray"), 
+		array($this, "obtainElementArray"),
 		func_get_args());
 
 	foreach($elementArray as $element) {
@@ -182,9 +182,9 @@ public function prepend() {
  */
 public function appendChildBefore($newElement /*, $newElement2, ... */) {
 	$elementArray = call_user_func_array(
-		array($this, "obtainElementArray"), 
+		array($this, "obtainElementArray"),
 		func_get_args());
-	
+
 	foreach($elementArray as $element) {
 		$elNode = $element;
 		if($element instanceof DomEl) {
@@ -215,9 +215,9 @@ public function prependSibling() {
  */
 public function appendChildAfter($newElement /*, $newElement2, ... */) {
 	$elementArray = call_user_func_array(
-		array($this, "obtainElementArray"), 
+		array($this, "obtainElementArray"),
 		func_get_args());
-	
+
 	foreach($elementArray as $element) {
 		$elNode = $element;
 		if($element instanceof DomEl) {
@@ -254,11 +254,11 @@ public function appendSibling() {
  * Appends multiple elements to this element, taking values from the
  * array passed in. This element will have however many indeces are in the
  * array appended elements.
- * @param mixed $data The array of data to compute, or an enumerable 
+ * @param mixed $data The array of data to compute, or an enumerable
  * object.
  * @param mixed $element The element to create and append for each item in
  * the array.
- * @param array $attrArray A key-value-pair of attribute names and array 
+ * @param array $attrArray A key-value-pair of attribute names and array
  * keys. Each key will be created as an attribute on the new element,
  * the attribute's value will be the value stored in $data's index that
  * matches the value of the $attrArray key.
@@ -271,7 +271,7 @@ $attrArray = array(), $textKey = null) {
 
 	if($element instanceof DOMNode) {
 		$elementToCreate = new DomEl(
-			$this->_dom, 
+			$this->_dom,
 			$element->cloneNode(true));
 	}
 	else if($element instanceof DomEl) {
@@ -364,7 +364,7 @@ public function replace($replaceWith) {
 		$elNode = $element->node;
 	}
 
-	return $this->node->parentNode->replaceChild($elNode, $this->node);		
+	return $this->node->parentNode->replaceChild($elNode, $this->node);
 }
 
 /**
@@ -407,7 +407,7 @@ public function toggleClass($className) {
 /**
  * Perform a str_replace on an element's attribute, without having to handle the
  * string multiple times.
- * @param string $attr The attribute of the current element to act as the 
+ * @param string $attr The attribute of the current element to act as the
  * haystack.
  * @param string $substr The needle to search for.
  * @param string $replacement The string to replace with.
@@ -489,7 +489,7 @@ public function __get($key) {
 				return $this->node->getAttribute($key);
 			}
 		}
-		
+
 		return null;
 		break;
 	}
@@ -543,7 +543,7 @@ public function __set($key, $value) {
 		break;
 	case "value":
 		// TODO: Document this heavily - major feature.
-		// Allows to set the 'value' of a <select> or <textarea>, and it 
+		// Allows to set the 'value' of a <select> or <textarea>, and it
 		// will automatically select the correct <option> or output the
 		// correct innerText.
 		$tag = strtolower($this->node->tagName);
