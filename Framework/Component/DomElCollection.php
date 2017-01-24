@@ -1,4 +1,10 @@
-<?php class DomElCollection implements Iterator, ArrayAccess {
+<?php
+
+/**
+ * @method void setAttribute(string $attributeName, string $attributeValue);
+ * @method void replace(DomEl $replaceWith);
+ */
+class DomElCollection implements Iterator, ArrayAccess {
 /**
  * TODO: Docs.
  *

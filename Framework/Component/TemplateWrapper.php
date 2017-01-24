@@ -16,6 +16,7 @@ public function offsetExists($offset) {
 
 /**
  * Returns a cloned DomEl of the requested template.
+ * @return DomEl
  */
 public function offsetGet($offset) {
 	if($this->offsetExists($offset)) {
