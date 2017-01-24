@@ -1,8 +1,13 @@
-<?php use RoadTest\OAuth\Authenticator;
+<?php
+use Psr\Log\LoggerInterface;
+use RoadTest\OAuth\Authenticator;
 use RoadTest\Utility\Logger\LoggerFactory;
 
 class User_PageTool extends PageTool
 {
+    /** @var  LoggerInterface */
+    private static $logger;
+
     /**
      * User PageTool is used to provide authorisation within your application,
      * along with anonymous users for applications that don't require signing up but
@@ -28,33 +33,28 @@ class User_PageTool extends PageTool
      */
     public function getUser(Authenticator $auth): array
     {
-        // Ensure there is a UUID tracking cookie set.
-        $uuid = self::track();
+        $logger = self::getLogger();
+        $user = Session::get("PhpGt.User");
 
-        $user = $this->loadAuthenticatedUser($auth, $uuid);
-        if ($user == null) {
-            $user = $this->loadAnonymousUser($uuid);
+        if ($user === null) {
+            // Ensure there is a UUID tracking cookie set.
+            $uuid = self::track();
+
+            $user = $this->loadAuthenticatedUser($auth, $uuid);
+            if ($user === null) {
+                $user = $this->loadAnonymousUser($uuid);
+            }
+            if ($user === null) {
+                $user = $this->createNewAnonymousUser($uuid);
+            }
+        } else {
+            $logger->debug("Loaded user " . $user["ID"] . " from session");
         }
-        if ($user == null) {
-            $user = $this->createNewAnonymousUser($uuid);
-        }
 
-        // Return the array-like-object representing the user.
-        return $this->markUserActive($user);
-    }
-
-    /**
-     * Removes tracking of the current user so they're "forgotten" in this session and a new
-     * user is created on the next page call.
-     */
-    public static function unAuth()
-    {
-        LoggerFactory::get(self::class)
-            ->debug("unAuthing user - removing PhpGt_User_PageTool cookie " .
-                "and PhpGt.User session object");
-        $_COOKIE["PhpGt_User_PageTool"] = null;
-        setcookie("PhpGt_User_PageTool", 0, 1, "/");
-        Session::delete("PhpGt.User");
+        $this->markUserActive($user);
+        // have to save it back to the session as it's an array not an object
+        $user = Session::set("PhpGt.User", $user);
+        return $user;
     }
 
     /**
@@ -84,7 +84,7 @@ class User_PageTool extends PageTool
      */
     private function loadAnonymousUser(string $uuid)
     {
-        $logger = LoggerFactory::get($this);
+        $logger = self::getLogger();
         $logger->debug("Attempting to load anonymous user with UUID $uuid");
         // Ensure there is a related user in the database.
         // If a user doesn't exist, create one.
@@ -117,22 +117,23 @@ class User_PageTool extends PageTool
      * database record which in turn will be loaded and returned.
      *
      * @param Authenticator $auth The authentication interface
+     * @param string        $uuid The user's UUID
      *
      * @return array|null A user array - or null if there is no authenticated user
-     * @throws HttpError
+     * @throws InvalidUUIDException
      */
     private function loadAuthenticatedUser(Authenticator $auth, string $uuid)
     {
-        $logger = LoggerFactory::get($this);
-        if ($auth->isAuthenticated($uuid) === false) {
+        $logger = self::getLogger();
+        if ($auth->isAuthenticated() === false) {
             return null;
         }
 
         // The user is authenticated to an OAuth provider.
         // The database will be checked for existing user matching OAuth data...
         // ... if there is no match, one will be stored.
-        $resourceOwnerId = $auth->getResourceOwnerId($uuid);
-        $oauth_uuid = $auth->getAuthenticatedProvider($uuid) . $resourceOwnerId;
+        $resourceOwnerId = $auth->getResourceOwnerId();
+        $oauth_uuid = $auth->getAuthenticatedProvider() . $resourceOwnerId;
 
         $logger->debug("Attempting to load authenticated user with OAuthUID $oauth_uuid");
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
@@ -169,7 +170,7 @@ class User_PageTool extends PageTool
             $userDB->linkOAuth([
                 "FK_User" => $dbUser["ID"],
                 "oauth_uuid" => $oauth_uuid,
-                "oauth_name" => $auth->getAuthenticatedProvider($uuid),
+                "oauth_name" => $auth->getAuthenticatedProvider(),
             ]);
 
             $dbUser = array_merge($dbUser, [
@@ -189,14 +190,14 @@ class User_PageTool extends PageTool
      */
     private function createNewAnonymousUser(string $uuid): array
     {
-        $logger = LoggerFactory::get($this);
+        $logger = self::getLogger();
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
         /** @var User_Api $db */
         $db = $this->_api[$this];
         $db->addAnon(["uuid" => $uuid]);
         $dbUser = $db->getByUuid(["uuid" => $uuid]);
         $dbUser = $dbUser->result[0];
-        $logger->debug("New user created in db: {$dbUser['ID']}");
+        $logger->debug("Created new user in db: {$dbUser['ID']}");
         return $dbUser;
     }
 
@@ -206,18 +207,29 @@ class User_PageTool extends PageTool
      *
      * @param array $user The user to mark
      *
-     * @return array The user, updated with its dateTimeLastActive
+     * @return void nothing - user is passed by reference
      */
-    private function markUserActive(array $user): array
+    private function markUserActive(array &$user)
     {
         /** @noinspection PhpIllegalArrayKeyTypeInspection */
         /** @var User_Api $userDB */
         $userDB = $this->_api[$this];
         $userDB->setActive(["ID" => $user["ID"]]);
 
-        return array_merge($user, [
-            "dateTimeLastActive" => date("Y-m-d H:i:s"),
-        ]);
+        $user["dateTimeLastActive"] = date("Y-m-d H:i:s");
+    }
+
+    /**
+     * Removes tracking of the current user so they're "forgotten" in this session and a new
+     * user is created on the next page call.
+     */
+    public static function unAuth()
+    {
+        self::getLogger()
+            ->debug("unAuthing user - removing PhpGt_User_PageTool cookie " .
+                "and PhpGt.User session object");
+        self::removeTrackingCookie();
+        Session::delete("PhpGt.User");
     }
 
     /**
@@ -255,7 +267,7 @@ class User_PageTool extends PageTool
      */
     private static function setTrackingCookie(string $uuid)
     {
-        $logger = LoggerFactory::get(self::class);
+        $logger = self::getLogger();
 
         $expires = strtotime("+105 weeks");
         // if we're in production, only allow the cookie over https.  (Can't always
@@ -267,5 +279,27 @@ class User_PageTool extends PageTool
         }
         $_COOKIE["PhpGt_User_PageTool"] = $uuid;
         $logger->debug("Tracking cookie set/updated for UUID {$uuid}");
+    }
+
+    private static function removeTrackingCookie()
+    {
+        $logger = self::getLogger();
+
+        $_COOKIE["PhpGt_User_PageTool"] = null;
+        setcookie("PhpGt_User_PageTool", 0, 1, "/");
+
+        $logger->debug("Tracking cookie removed");
+    }
+
+    /**
+     * @return LoggerInterface
+     */
+    private static function getLogger(): LoggerInterface
+    {
+        if (self::$logger == null) {
+            self::$logger = LoggerFactory::get(self::class);
+        }
+
+        return self::$logger;
     }
 }#
