@@ -11,6 +11,7 @@
 protected static $_isProduction = false;
 protected static $_isCached = false;
 protected static $_isClientCompiled = false;
+protected static $_isApiAccessEnabled = false;
 protected static $_timezone = "UTC";
 
 // When true, URLs are converted into directory style, dropping the need
@@ -40,4 +41,7 @@ public static function isProduction() {
 	return static::$_isProduction;
 }
 
+public static function isApiAccessEnabled() {
+    return static::$_isApiAccessEnabled;
+}
 }#

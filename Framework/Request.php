@@ -65,7 +65,7 @@ public function __construct($config, $t) {
 		sleep($seconds);
 	}
 
-	if(EXT == "json") {
+	if(EXT == "json" && $config["App"]::isApiAccessEnabled() === true) {
 		$this->contentType = "application/json";
 
 		// Look for requested API. Note that API requests have to always
