@@ -1,7 +1,7 @@
 <?php final class Response {
 /**
  * Deals with all view buffering and rendering, and provides a mechanism for the
- * Dispatcher to execute functions on all instantiated PageCode and PageTool 
+ * Dispatcher to execute functions on all instantiated PageCode and PageTool
  * objects. The Response object will be skipped if application cache is enabled,
  * and the cache is valdid. Rather, the Request object will simply serve the
  * cached response.
@@ -50,8 +50,8 @@ public function __construct($request) {
 	$mtimeMax = max($mtimeHeader, $mtimeView, $mtimeFooter);
 	Session::set("Gt.PageView.mtime", $mtimeMax);
 
-	// TODO: Storing directly on the session like this is deprecated. Use 
-	// Session::set instead. Leaving this here for now as there are 
+	// TODO: Storing directly on the session like this is deprecated. Use
+	// Session::set instead. Leaving this here for now as there are
 	// dependencies on this key elsewhere.
 	if(empty($_SESSION["PhpGt_Cache"])) {
 		$_SESSION["PhpGt_Cache"] = array();
@@ -75,8 +75,6 @@ public function tryFixUrl($path = null) {
 		$path = $_SERVER["REQUEST_URI"];
 	}
 
-	$currentPath = "";
-
 	// Treat the entire path as an array, ignoring the first slash.
 	$pathArray = explode("/", $path);
 	array_shift($pathArray);
@@ -86,8 +84,14 @@ public function tryFixUrl($path = null) {
 
 	// Find a case-insensitive match for each level inside the directory tree.
 	foreach ($pathArray as $i => $p) {
-		$dirArray = scandir($pageViewFile . $pathRead);
+        $dirToScan = $pageViewFile . $pathRead;
+        if(! is_dir($dirToScan)) {
+            break;
+        }
+
+        $dirArray = scandir($dirToScan);
 		foreach ($dirArray as $dir) {
+		    // ignore hidden files (beginning with a .)
 			if($dir[0] == ".") {
 				continue;
 			}
@@ -120,7 +124,7 @@ public function tryFixUrl($path = null) {
 	}
 
 	if(is_file($pageViewFile)) {
-		return "/" . $result;		
+		return "/" . $result;
 	}
 	else {
 		return false;
@@ -156,7 +160,7 @@ public function dispatch($name, $parameter = null) {
 	// Call method, if it exists, on each existant PageCode.
 	foreach($dispatchArray as $dispatchTo) {
 		if(method_exists($dispatchTo, $name)) {
-				if(!($dispatchTo instanceof PageCode 
+				if(!($dispatchTo instanceof PageCode
 				&& $this->_pageCodeStop) ) {
 					$result = call_user_func_array(
 						array($dispatchTo, $name),
@@ -188,7 +192,7 @@ public function executePageTools($pageToolArray, $api, $dom, $template) {
 			if(!is_dir($path)) {
 				continue;
 			}
-			
+
 			if(file_exists(  "$path/$tool/$toolFile")) {
 				require_once("$path/$tool/$toolFile");
 			}
@@ -207,7 +211,7 @@ public function executePageTools($pageToolArray, $api, $dom, $template) {
 }
 
 /**
- * Adds required metadata according to current session, such as currently 
+ * Adds required metadata according to current session, such as currently
  * selected language by user.
  * @param Dom $dom The current active Dom.
  */
@@ -326,7 +330,7 @@ private function bufferPageView($fileName = null) {
 		// Must look for a dynamic file.
 		// DOC: Dynamic PageView files.
 		if(false !== ($dynamicFileName = $this->findDynamicPageView()) ) {
-			// File being required is straight HTML - will be inserted into 
+			// File being required is straight HTML - will be inserted into
 			// the output buffer.
 			require($dynamicFileName);
 			return filemtime($dynamicFileName);
@@ -339,7 +343,7 @@ private function bufferPageView($fileName = null) {
 /**
 * Attempts to find the path of a PageView's dynamic file from the current
 * request. A dynamic file is named "_Dynamic.html", and the presence of
-* this file in a directory means that a PageView doesn't have to exist - 
+* this file in a directory means that a PageView doesn't have to exist -
 * a common dynamic file can be loaded instead, which can be manupulated by
 * the page code to act as a unique PageView.
 */
