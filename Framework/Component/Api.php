@@ -3,7 +3,7 @@
  * Api is a dependency injector for each module of the application's data layer.
  * By default, the API links directly to the DAL class, and if standard queries
  * are executed, there is no requirement for an API class to be created.
- * 
+ *
  * API classes are to be used when there are high levels of computation needed,
  * or external data-sources (non-mysql) required, such as external webservices
  * or file-based data structures.
@@ -16,7 +16,7 @@ private $_result 		= null;
 private $_dalResult		= null;
 
 private $_affectedRows	= 0;
-private $_lastInsertId	= null;
+private $_lastInsertID	= null;
 
 private $_isTool		= false;
 
@@ -56,11 +56,11 @@ public function apiCall($dal) {
 
 			$this->_result = array();
 
-			if((is_array($this->_dalResult) 
+			if((is_array($this->_dalResult)
 			|| $this->_dalResult instanceof Traversable)) {
 				foreach($this->_dalResult as $key => $value) {
 					$this->_result[$key] = $value;
-				}				
+				}
 			}
 			return true;
 		}
@@ -68,7 +68,7 @@ public function apiCall($dal) {
 			$this->setError($e->getMessage());
 		}
 	}
-	
+
 	if(in_array(ucfirst($this->_methodName), $this->externalMethods)
 	|| strtolower(EXT) !== "json") {
 		// If there is no defined method, execute the SQL and pass in the
@@ -134,7 +134,7 @@ public function execute() {
 	$this->_result = call_user_func_array(
 		array($this, $this->_methodName),
 		$this->_methodParams);
-	
+
 	return !is_null($this->_result);
 }
 
