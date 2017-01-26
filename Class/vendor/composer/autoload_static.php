@@ -21,9 +21,6 @@ class ComposerStaticInitbec3ade1483b96d41a198679d3168179
     );
 
     public static $classMap = array (
-        'Gt\\User\\AuthenticatedUser' => __DIR__ . '/../..' . '/Autoloaded/Gt/User/AuthenticatedUser.php',
-        'Gt\\User\\InvalidUUIDException' => __DIR__ . '/../..' . '/Autoloaded/Gt/User/InvalidUUIDException.php',
-        'Gt\\User\\User' => __DIR__ . '/../..' . '/Autoloaded/Gt/User/User.php',
         'scss_formatter' => __DIR__ . '/..' . '/leafo/scssphp/scss.inc.php',
         'scss_formatter_compressed' => __DIR__ . '/..' . '/leafo/scssphp/scss.inc.php',
         'scss_formatter_nested' => __DIR__ . '/..' . '/leafo/scssphp/scss.inc.php',
