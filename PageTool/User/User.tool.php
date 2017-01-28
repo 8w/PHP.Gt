@@ -1,9 +1,9 @@
 <?php
-use Gt\User\AuthenticatedUser;
-use Gt\User\InvalidUUIDException;
-use Gt\User\User;
 use Psr\Log\LoggerInterface;
 use RoadTest\OAuth\Authenticator;
+use RoadTest\User\Entity\AuthenticatedAppUser;
+use RoadTest\User\Entity\User;
+use RoadTest\User\Exception\InvalidUUIDException;
 use RoadTest\Utility\Logger\LoggerFactory;
 
 class User_PageTool extends PageTool
@@ -101,7 +101,7 @@ class User_PageTool extends PageTool
      * @param Authenticator $auth The authentication interface
      * @param string        $uuid The user's UUID
      *
-     * @return AuthenticatedUser|null A user array - or null if there is no authenticated user
+     * @return AuthenticatedAppUser|null A user array - or null if there is no authenticated user
      * @throws InvalidUUIDException
      */
     private function loadAuthenticatedUser(Authenticator $auth, string $uuid)
@@ -128,7 +128,7 @@ class User_PageTool extends PageTool
         $user = null;
         if ($existingOAuthUser->hasResult) {
             $dbUser = $existingOAuthUser->result[0];
-            $user = new AuthenticatedUser(
+            $user = new AuthenticatedAppUser(
                 $dbUser["ID"],
                 $dbUser["uuid"],
                 $dbUser["dateTimeLastActive"],
@@ -163,7 +163,7 @@ class User_PageTool extends PageTool
                 "oauth_name" => $auth->getAuthenticatedProvider(),
             ]);
 
-            $user = new AuthenticatedUser(
+            $user = new AuthenticatedAppUser(
                 $dbUser["ID"],
                 $dbUser["uuid"],
                 $dbUser["dateTimeLastActive"],

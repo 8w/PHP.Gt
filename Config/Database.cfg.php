@@ -1,11 +1,11 @@
 <?php class Database_Config_Framework extends Config {
 /**
- * All details of the database connection are stored in this file. 
- * By default, there are certain connection settings that need to be changed 
- * per-application, such as the database username and password, and possibly IP 
+ * All details of the database connection are stored in this file.
+ * By default, there are certain connection settings that need to be changed
+ * per-application, such as the database username and password, and possibly IP
  * address if an external server is used.
  *
- * The order of automatic deployment of database tables is specified here, so 
+ * The order of automatic deployment of database tables is specified here, so
  * any table dependencies can be specified.
  */
 protected static $_host = "127.0.0.1";
@@ -50,9 +50,9 @@ public static function getCreationOrder() {
 
 public static function getSettings() {
 	return array(
-		"ConnectionString" => 
-			static::$_driver 
-			. ":dbname=" 	. static::$_name 
+		"ConnectionString" =>
+			static::$_driver
+			. ":dbname=" 	. static::$_name
 			. ";host=" 		. static::$_host
 			. ";port=" 		. static::$_port
 			. ";charset=" 	. static::$_charset,
@@ -63,6 +63,7 @@ public static function getSettings() {
 		"Password"	=> static::$_pass,
 		"DbName" 	=> static::$_name,
 		"Host"		=> static::$_host,
+        "Port"      => static::$_port,
 		"Timezone"	=> static::$_timezone,
 	);
 }
