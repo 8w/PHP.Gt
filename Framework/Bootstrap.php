@@ -240,7 +240,6 @@ if(isset($_GET["DebugBootstrap"])) {
 	. "BASEDIR: "	. BASEDIR	. PHP_EOL
 	. "FILE: "		. FILE		. PHP_EOL
 	. "EXT: "		. EXT		. PHP_EOL
-	. "DIRPATH: "	. DIRPATH	. PHP_EOL
 	. "FILEPATH: "	. FILEPATH	. PHP_EOL
 	. "FILECLASS: "	. FILECLASS	. PHP_EOL
 	. PHP_EOL;
@@ -251,5 +250,7 @@ if(isset($_GET["DebugBootstrap"])) {
 	exit;
 }
 
+$configurator = new \RoadTest\Configuration\Configurator();
+$configurator->loadConfiguration();
+
 return new Gt($startTime);
-?>
