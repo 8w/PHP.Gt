@@ -250,7 +250,7 @@ if(isset($_GET["DebugBootstrap"])) {
 	exit;
 }
 
-$configurator = new \RoadTest\Configuration\Configurator();
+$configurator = new \RoadTest\Configuration\Configurator(APPROOT . "/Config");
 $configurator->loadConfiguration();
 
 return new Gt($startTime);

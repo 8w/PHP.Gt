@@ -1,4 +1,10 @@
-<?php class DomEl implements ArrayAccess {
+<?php
+
+
+/**
+ * @method void appendToAttribute(string $attributeName, string $attributeValue);
+*/
+class DomEl implements ArrayAccess {
 /**
  * A wrapper to PHP's native DOMElement. Helper methods have been added, but
  * all methods and properties of the native DOMElement are still accessible.
