@@ -1,4 +1,11 @@
-<?php class Dom implements ArrayAccess {
+<?php
+
+/**
+ * Class Dom
+ *
+ * @method DomEl createDocumentFragment();
+ */
+class Dom implements ArrayAccess {
 /**
  * The first purpose of the `Dom` object is automatic parsing of the PageView
  * files. When the object is constructed, it takes the raw HTML string loaded

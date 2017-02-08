@@ -2,7 +2,7 @@
 /**
  * PageTool objects operate in a similar way to PageCode objects. PageTools can
  * be seen as groupings of reusable code, that is made accessible to all
- * PageCode. 
+ * PageCode.
  *
  * A PageTool is usually created when code within a PageCode becomes required
  * elsewhere in an application. This code is then packaged into a tool, that
@@ -12,9 +12,13 @@
  * be used to keep the PageCode clean.
  */
 protected $_name = null;
+/** @var ApiWrapper */
 protected $_api = null;
+/** @var Dom  */
 protected $_dom = null;
+/** @var TemplateWrapper */
 protected $_template = null;
+/** @var PageToolWrapper  */
 protected $_tool = null;
 
 public function __construct($api, $dom, $template, $tool) {
@@ -66,7 +70,7 @@ public function clientSide() {
 			}
 
 			foreach ($iterator = new RecursiveIteratorIterator(
-	  		new RecursiveDirectoryIterator($dir, 
+	  		new RecursiveDirectoryIterator($dir,
 	  			RecursiveDirectoryIterator::SKIP_DOTS),
 	  		RecursiveIteratorIterator::SELF_FIRST) as $item) {
 	  			$subPath = $iterator->getSubPathName();
@@ -77,7 +81,7 @@ public function clientSide() {
 					if(!mkdir("$wwwDir/$subPath", 0775, true)) {
 						die("error making $wwwDir/$subPath");
 					}
-				} 
+				}
 				else {
 					$destination = APPROOT . "/www/$currentType/$subPath";
 					if(!is_dir(dirname($destination))) {

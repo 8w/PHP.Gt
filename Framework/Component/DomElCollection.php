@@ -8,6 +8,8 @@
  * @method void removeClass(string $class);
  * @method void addClass(string $class);
  * @method DomElCollection xpath(string $selector);
+ * @method void appendChild(DomElCollection $fragment);
+ * @method void prependSibling(DomElCollection $fragment);
  */
 class DomElCollection implements Iterator, ArrayAccess {
 /**

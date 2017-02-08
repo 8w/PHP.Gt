@@ -11,6 +11,7 @@ private $_stop;
 protected $_api			= null;
 /** @var Dom  */
 protected $_dom			= null;
+/** @var TemplateWrapper  */
 protected $_template	= null;
 /** @var PageToolWrapper  */
 protected $_tool		= null;

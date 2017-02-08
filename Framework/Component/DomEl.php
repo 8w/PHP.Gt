@@ -3,7 +3,10 @@
 
 /**
  * @method void appendToAttribute(string $attributeName, string $attributeValue);
-*/
+ * @method void appendXML(string $xmlText);
+ * @method void setAttribute(string $attributeName, string $attributeValue);
+ * @method void removeAttribute(string $attribute);
+ */
 class DomEl implements ArrayAccess {
 /**
  * A wrapper to PHP's native DOMElement. Helper methods have been added, but
