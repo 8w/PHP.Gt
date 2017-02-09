@@ -14,6 +14,7 @@ class DomEl implements ArrayAccess {
  */
 
 public $node;
+/** @var  Dom */
 public $_dom;
 
 // Helps debugging:
@@ -69,6 +70,7 @@ public function offsetExists($selector) {
 
 }
 
+/** @return DomElCollection */
 public function offsetGet($selector) {
 	return $this->_dom->offsetGet($selector, $this->node);
 }

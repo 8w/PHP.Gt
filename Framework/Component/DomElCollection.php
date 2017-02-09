@@ -1,15 +1,17 @@
 <?php
 
 /**
+ * @method string getAttribute(string $attribute);
  * @method void setAttribute(string $attributeName, string $attributeValue);
+ * @method void removeAttribute(string $attribute);
  * @method void replace(DomEl $replaceWith);
  * @method DomEl remove();
- * @method void removeAttribute(string $attribute);
  * @method void removeClass(string $class);
  * @method void addClass(string $class);
  * @method DomElCollection xpath(string $selector);
- * @method void appendChild(DomElCollection $fragment);
- * @method void prependSibling(DomElCollection $fragment);
+ * @method void appendChild(DomEl|DomElCollection $fragment);
+ * @method void appendSibling(DomEl|DomElCollection $fragment);
+ * @method void prependSibling(DomEl|DomElCollection $fragment);
  */
 class DomElCollection implements Iterator, ArrayAccess {
 /**

@@ -4,7 +4,7 @@ private static $_styleScriptFilesCache = "/www/StyleScriptFiles.cache";
 private $_assetFilesCache;
 private static $_styleScriptFilesMD5 = null;
 
-public function __construct($manifest) {
+public function __construct(Manifest $manifest) {
 	$this->_manifest = $manifest;
 	$this->_assetFilesCache = APPROOT . "/www/AssetFiles.cache";
 }
@@ -205,7 +205,7 @@ public static function organiseStyleScriptFiles($dryRun = false) {
 
 public static function iterateMd5($item, $iterator, $innerDir, $doCopy) {
 	if($item->isDir()) {
-		return;
+		return "";
 	}
 
 	$sourcePath = $item->getPathname();
