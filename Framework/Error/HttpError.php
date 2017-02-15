@@ -1,4 +1,5 @@
 <?php
+use RoadTest\OAuth\Authenticator;
 use RoadTest\Utility\Logger\LoggerFactory;
 
 class HttpError extends Exception {
@@ -183,7 +184,7 @@ private function displayError($code, $data = array("")) {
 
 				ob_clean();
 
-				if(AppAuth::isAuthenticated()) {
+				if(Authenticator::mightBeAuthenticated()) {
 				    $node = $dom->getElementById("ifLoggedOut");
 				    if($node !== null) {
 				        $node->parentNode->removeChild($node);
