@@ -4,6 +4,7 @@
 /**
  * @method void appendToAttribute(string $attributeName, string $attributeValue);
  * @method void appendXML(string $xmlText);
+ * @method string|void getAttribute(string $attributeName);
  * @method void setAttribute(string $attributeName, string $attributeValue);
  * @method void removeAttribute(string $attribute);
  */
@@ -71,8 +72,8 @@ public function offsetExists($selector) {
 }
 
 /** @return DomElCollection */
-public function offsetGet($selector) {
-	return $this->_dom->offsetGet($selector, $this->node);
+public function offsetGet($cssSelector) {
+	return $this->css($cssSelector);
 }
 
 public function offsetSet($selector, $value) {
@@ -84,11 +85,11 @@ public function offsetUnset($selector) {
 }
 
 public function css($selector) {
-	return $this->offsetGet($selector);
+	return $this->_dom->css($selector, $this->node);
 }
 
 public function xpath($query) {
-	return $this->_dom->offsetGet($query, $this->node, true);
+	return $this->_dom->xpath($query, $this->node);
 }
 
 /**

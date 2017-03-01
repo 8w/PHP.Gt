@@ -102,6 +102,37 @@ public function languageScrape($attr = "data-lang") {
 	}
 }
 
+public function css($cssSelector, $contextNode = null): DomElCollection
+{
+    // Working with an XQuery to CSS conversion utility:
+    $xQuery = new Css2Xpath($cssSelector);
+    return $this->xpath($xQuery, $contextNode);
+}
+
+public function xpath(string $query, $contextNode = null): DomElCollection
+{
+    if(!is_null($contextNode) && $contextNode instanceof DomEl) {
+        $contextNode = $contextNode->node;
+    }
+
+    $xpath = new DOMXPath($this->_domDoc);
+
+    // Remove double slash if a context is given.
+    if (!is_null($contextNode)) {
+        if (strpos($query, "//") === 0) {
+            //$xQuery = str_replace("//", "*", $xQuery);
+            //$xQuery = substr($xQuery, 2);
+            $orig = $query . "";
+            $query = preg_replace("/^\/\//", ".//", $query);
+            $query = preg_replace("/\|\/\//", "|.//", $query);
+        }
+    }
+
+    $domNodeList = $xpath->query($query, $contextNode);
+
+    return new DomElCollection($this, $domNodeList);
+}
+
 /**
  * Allows plain text to be included in from other areas of the PageView
  * directory structure.
@@ -195,38 +226,15 @@ public function offsetExists($selector) {
 /**
 * Returns a list of Dom elements (type DomEl) that match the
 * provided CSS selector.
-* @param string $selector CSS selector to match.
+*
+* @param string        $cssSelector CSS selector to match.
 * @param DOMNode|DomEl $contextNode Optional. The sub-node to query.
-* @return DomElCollection A list of matching DomEl objects.
+*
+*@return DomElCollection A list of matching DomEl objects.
 */
-public function offsetGet($selector, $contextNode = null,
-$overrideXpath = false) {
-	if(!is_null($contextNode)) {
-		if($contextNode instanceof DomEl) {
-			$contextNode = $contextNode->node;
-		}
-	}
+public function offsetGet($cssSelector) {
+    return $this->css($cssSelector);
 
-	// Working with an XQuery to CSS convertion utility:
-	$xQuery = $overrideXpath
-		? $selector
-		: new Css2Xpath($selector);
-	$xpath = new DOMXPath($this->_domDoc);
-
-	// Remove double slash if a context is given.
-	if(!is_null($contextNode)) {
-		if(strpos($xQuery, "//") === 0) {
-			//$xQuery = str_replace("//", "*", $xQuery);
-			//$xQuery = substr($xQuery, 2);
-			$orig = $xQuery . "";
-			$xQuery = preg_replace("/^\/\//", ".//", $xQuery);
-			$xQuery = preg_replace("/\|\/\//", "|.//", $xQuery);
-		}
-	}
-
-	$domNodeList = $xpath->query($xQuery, $contextNode);
-
-	return new DomElCollection($this, $domNodeList);
 }
 
 /**
