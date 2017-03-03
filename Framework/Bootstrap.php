@@ -197,7 +197,7 @@ $toLoad["Optional"] = array(
 	"Application-specific security config" =>
 		APPROOT."/Config/Security.cfg.php",
 	"The application's Composer autoloader file" =>
-		APPROOT . "/Class/vendor/autoload.php",
+		APPROOT . "/vendor/autoload.php",
 );
 
 foreach($toLoad as $requirement => $loadArray) {
