@@ -12,7 +12,7 @@ if(!defined("GTROOT")) {
 	define("BASEDIR",   "");
 	define("PATH",		"/");
 	define("FILE",      "Index");
-	define("EXT",       "html");	
+	define("EXT",       "html");
 }
 
 require_once(GTROOT . "/Framework/Autoloader.php");
@@ -20,7 +20,6 @@ require_once(GTROOT . "/Class/Log/Log.class.php");
 require_once(GTROOT . "/Class/Log/Logger.class.php");
 require_once(GTROOT . "/Config/Config.cfg.php");
 require_once(GTROOT . "/Config/App.cfg.php");
-require_once(GTROOT . "/Config/Database.cfg.php");
 require_once(GTROOT . "/Config/Security.cfg.php");
 require_once(GTROOT . "/Framework/Gt.php");
 
@@ -32,14 +31,14 @@ function createTestApp() {
 	$dir = APPROOT;
 
 	foreach ($iterator = new RecursiveIteratorIterator(
-		new RecursiveDirectoryIterator($source, 
+		new RecursiveDirectoryIterator($source,
 			RecursiveDirectoryIterator::SKIP_DOTS),
 	RecursiveIteratorIterator::SELF_FIRST) as $item) {
 
 		$subPathName = $iterator->getSubPathName();
 		if($item->isDir()) {
 			if(!is_dir("$dir/" . $subPathName)) {
-				mkdir("$dir/" . $subPathName, 0775, true);				
+				mkdir("$dir/" . $subPathName, 0775, true);
 			}
 		} else {
 			if($item->getFilename()[0] == ".") {
@@ -55,7 +54,7 @@ function removeTestApp() {
 	if(!is_dir($dir)) {
 		return;
 	}
-	
+
 	foreach ($iterator = new RecursiveIteratorIterator(
 		new RecursiveDirectoryIterator($dir,
 			RecursiveDirectoryIterator::SKIP_DOTS),

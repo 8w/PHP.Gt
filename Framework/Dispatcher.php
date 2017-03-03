@@ -6,7 +6,7 @@
 * access to exactly what they need.
 */
 public function __construct($response, $config) {
-	$dal = new Dal($config["Database"]::getSettings());
+	$dal = new Dal();
 	if($response->dispatch("apiCall", $dal)) {
 		// Quit early if request is api call.
 		$response->dispatch("apiOutput");

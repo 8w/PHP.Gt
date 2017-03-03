@@ -121,8 +121,6 @@ $toLoad["Required"] = array(
 		GTROOT."/Config/Config.cfg.php",
 	"Shared application config" =>
 		GTROOT."/Config/App.cfg.php",
-	"Shared database config" =>
-		GTROOT."/Config/Database.cfg.php",
 	"Shared security config" =>
 		GTROOT."/Config/Security.cfg.php",
 
@@ -192,8 +190,6 @@ $toLoad["Required"] = array(
 $toLoad["Optional"] = array(
 	"Application-specific application config" =>
 		APPROOT."/Config/App.cfg.php",
-	"Application-specific database config" =>
-		APPROOT."/Config/Database.cfg.php",
 	"Application-specific security config" =>
 		APPROOT."/Config/Security.cfg.php",
 	"The application's Composer autoloader file" =>

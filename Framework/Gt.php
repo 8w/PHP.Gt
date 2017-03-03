@@ -13,30 +13,24 @@
  * request-response execution.
  */
 public function __construct($t, $skipRequestResponse = false) {
-	// set_error_handler(array("ErrorHandler", "error"), 
+	// set_error_handler(array("ErrorHandler", "error"),
 	// 	E_ALL & E_NOTICE & E_RECOVERABLE_ERROR);
 
 	$baseSuffix = "_Framework";
 	$appConfigClass = "App_Config";
-	$databaseConfigClass = "Database_Config";
 	$securityConfigClass = "Security_Config";
 
 	if(!class_exists($appConfigClass)) {
 		class_alias($appConfigClass . $baseSuffix, $appConfigClass);
 		$appConfigClass .= $baseSuffix;
 	}
-	if(!class_exists($databaseConfigClass)) {
-		class_alias($databaseConfigClass . $baseSuffix, $databaseConfigClass);
-		$databaseConfigClass .= $baseSuffix;
-	}
 	if(!class_exists($securityConfigClass)) {
 		class_alias($securityConfigClass . $baseSuffix, $securityConfigClass);
 		$securityConfigClass .= $baseSuffix;
 	}
-	
+
 	$config = array(
 		"App"       => $appConfigClass,
-		"Database"  => $databaseConfigClass,
 		"Security"  => $securityConfigClass,
 	);
 	foreach ($config as $c) {
