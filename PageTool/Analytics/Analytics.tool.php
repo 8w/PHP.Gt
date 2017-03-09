@@ -3,7 +3,6 @@ use RoadTest\Utility\Logger\LoggerFactory;
 
 class Analytics_PageTool extends PageTool
 {
-
     const USER_TYPE = "dimension1";
     const BRANDING = "dimension2";
     const ANTI_SPAM = "dimension3";
@@ -11,7 +10,7 @@ class Analytics_PageTool extends PageTool
     private static $EVENT_KEY = "Gt.Analytics.events";
     private static $END_SESSION_KEY = "Gt.Analytics.endSession";
 
-    /**
+    /*
      * Google Analytics.
      * This simple PageTool doesn't have any functionality in the go() method.
      * Instead, pass the tracking code into the track() method.
@@ -50,54 +49,10 @@ class Analytics_PageTool extends PageTool
 
         $js = str_replace("{ANALYTICS_CODE}", $trackingCode, $js);
 
-        // enable remarketing
-        $js .= "\nga('require', 'displayfeatures');";
-
-        // send any pending events
-        if (Session::exists(self::$EVENT_KEY)) {
-            $events = Session::get(self::$EVENT_KEY);
-            foreach ($events as $event) {
-                $js .= "\nga('send', {
-                        hitType: 'event',
-                        eventCategory: '{$event["eventCategory"]}',
-                        eventAction:   '{$event["eventAction"]}',
-                        eventLabel:    '{$event["eventLabel"]}',
-                        eventValue:    '{$event["eventValue"]}'
-                    });
-                ";
-
-                $logger->debug(
-                    sprintf("Sending GA event: category=%s, action=%s, label=%s, value=%s",
-                        $event["eventCategory"],
-                        $event["eventAction"],
-                        $event["eventLabel"],
-                        $event["eventValue"]));
-            }
-            // delete them now they've been loaded for send
-            Session::delete(self::$EVENT_KEY);
-        }
-
-        // make sure the non-spam flag is always set so we can filter out google analytics spam entries
-        if (!Session::exists(self::$CUSTOM_DIMENSION_KEY . "." . self::ANTI_SPAM)) {
-            $this->customDimension(self::ANTI_SPAM, "true");
-        }
-
-        $customDimensions = Session::get(self::$CUSTOM_DIMENSION_KEY);
-        foreach ($customDimensions as $key => $value) {
-            $js .= "\nga('set', '{$key}', '{$value}');";
-
-            $logger->debug(
-                sprintf("Sending GA custom dimension: %s => %s",
-                    $key,
-                    $value));
-        }
-
-        if (Session::exists(self::$END_SESSION_KEY)) {
-            $js .= "\nga('send', 'pageview', {'sessionControl': 'start'});\n";
-            Session::delete(self::$END_SESSION_KEY);
-        } else {
-            $js .= "\nga('send', 'pageview');\n";
-        }
+        $js .= $this->enableRemarketing();
+        $js .= $this->getPendingEvents();
+        $js .= $this->getCustomDimensions();
+        $js .= $this->getSendEvent();
 
         $scriptToInsertBefore = null;
         $existingScript = $this->_dom["head > script"];
@@ -107,12 +62,14 @@ class Analytics_PageTool extends PageTool
 
         $script = $this->_dom->createElement(
             "script",
-            ["data-PageTool" => "Analytics"],
-            // finish-up with the send command
+            [
+                "type" => "text/javascript",
+                "data-PageTool" => "Analytics"
+            ],
             $js
         );
 
-        $this->_dom["head"]->insertBefore($script, $scriptToInsertBefore);
+        $this->_dom->css("head")->insertBefore($script, $scriptToInsertBefore);
     }
 
     public function customDimension($name, $value)
@@ -138,5 +95,75 @@ class Analytics_PageTool extends PageTool
     {
         Session::delete(self::$CUSTOM_DIMENSION_KEY);
         Session::set(self::$END_SESSION_KEY, true);
+    }
+
+    private function getPendingEvents(): string
+    {
+        $logger = LoggerFactory::get($this);
+        $js = "";
+
+        if (Session::exists(self::$EVENT_KEY)) {
+            $events = Session::get(self::$EVENT_KEY);
+            foreach ($events as $event) {
+                $js .= "\nga('send', {
+                        hitType: 'event',
+                        eventCategory: '{$event["eventCategory"]}',
+                        eventAction:   '{$event["eventAction"]}',
+                        eventLabel:    '{$event["eventLabel"]}',
+                        eventValue:    '{$event["eventValue"]}'
+                    });
+                ";
+
+                $logger->debug(
+                    sprintf("Sending GA event: category=%s, action=%s, label=%s, value=%s",
+                        $event["eventCategory"],
+                        $event["eventAction"],
+                        $event["eventLabel"],
+                        $event["eventValue"]));
+            }
+            // delete them now they've been loaded for send
+            Session::delete(self::$EVENT_KEY);
+        }
+
+        return $js;
+    }
+
+    private function getCustomDimensions(): string
+    {
+        $logger = LoggerFactory::get($this);
+        $js = "";
+
+        // make sure the non-spam flag is always set so we can filter out google analytics spam entries
+        if (!Session::exists(self::$CUSTOM_DIMENSION_KEY . "." . self::ANTI_SPAM)) {
+            $this->customDimension(self::ANTI_SPAM, "true");
+        }
+
+        $customDimensions = Session::get(self::$CUSTOM_DIMENSION_KEY);
+        foreach ($customDimensions as $key => $value) {
+            $js .= "\nga('set', '{$key}', '{$value}');";
+
+            $logger->debug(
+                sprintf("Sending GA custom dimension: %s => %s",
+                    $key,
+                    $value));
+        }
+        return $js;
+    }
+
+    private function getSendEvent(): string
+    {
+        if (Session::exists(self::$END_SESSION_KEY)) {
+            $js = "\nga('send', 'pageview', {'sessionControl': 'start'});\n";
+            Session::delete(self::$END_SESSION_KEY);
+            return $js;
+        } else {
+            $js = "\nga('send', 'pageview');\n";
+            return $js;
+        }
+    }
+
+    private function enableRemarketing(): string
+    {
+        return "\nga('require', 'displayfeatures');";
     }
 }#

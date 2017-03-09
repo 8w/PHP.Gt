@@ -9,9 +9,11 @@
  * @method void removeClass(string $class);
  * @method void addClass(string $class);
  * @method DomElCollection xpath(string $selector);
+ * @method void prependChild(DomEl|DomElCollection $fragment);
  * @method void appendChild(DomEl|DomElCollection $fragment);
  * @method void appendSibling(DomEl|DomElCollection $fragment);
  * @method void prependSibling(DomEl|DomElCollection $fragment);
+ * @method void insertBefore(DomEl $toInsert, DomEl|DomElCollection $before);
  */
 class DomElCollection implements Iterator, ArrayAccess {
 /**
