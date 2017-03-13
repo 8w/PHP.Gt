@@ -54,20 +54,15 @@ public function connect() {
 	if(!is_null($this->_dbh)) {
 		return;
 	}
-	try {
-		$this->_dbh = new PDO(
-			$this->_connectionString,
-			Configuration::getDatabaseUser(),
-			Configuration::getDatabasePassword()
-		);
-		$this->_dbh->setAttribute(
-			PDO::ATTR_ERRMODE,
-			PDO::ERRMODE_EXCEPTION);
-		$this->_dbh->query("SET time_zone='+0:00';");
-	}
-	catch(PDOException $e) {
-		LoggerFactory::get($this)->critical("Unable to connect to database", [$e]);
-	}
+    $this->_dbh = new PDO(
+        $this->_connectionString,
+        Configuration::getDatabaseUser(),
+        Configuration::getDatabasePassword()
+    );
+    $this->_dbh->setAttribute(
+        PDO::ATTR_ERRMODE,
+        PDO::ERRMODE_EXCEPTION);
+    $this->_dbh->query("SET time_zone='+0:00';");
 }
 
 /**
