@@ -117,26 +117,22 @@ private function query($sqlFile, $paramArray = array()) {
 		$stmt->bindParam($key, $value);
 	}
 
-	// The database may not be deployed yet. It will automatically deploy, but
-	// will need to re-execute the statement once deployed.
-	$tries = 0;
-	while($tries <= 10) {
-		try {
-			$stmt->closeCursor();
-			$result = $stmt->execute();
-			return new DalResult(
-				$stmt,
-				$this->_dal->lastInsertID(),
-				$sql,
-				$this->_tableName);
-		}
-		catch(PDOException $e) {
-			$this->_dal->autoDeploy($e);
-		}
-		$tries ++;
-	}
-	// Database can't be deployed.
-	return false;
+
+    try {
+        $stmt->closeCursor();
+        $result = $stmt->execute();
+        return new DalResult(
+            $stmt,
+            $this->_dal->lastInsertID(),
+            $sql,
+            $this->_tableName);
+    }
+    catch(PDOException $e) {
+	    \RoadTest\Utility\Logger\LoggerFactory::get($this)
+            ->error("Unable to execute $sqlFile", ["exception" => $e]);
+        throw new HttpError(500,
+            "Unable to update database using $sqlFile", $e);
+    }
 }
 
 }#
